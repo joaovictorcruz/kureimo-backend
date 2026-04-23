@@ -1,0 +1,6 @@
+@Kureimo.API_HostAddress = http://localhost:5177
+
+GET {{Kureimo.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
