@@ -46,7 +46,7 @@ namespace Kureimo.Domain.Entities
         /// A responsabilidade de validar se o set está aberto é do SetService,
         /// mas a regra de "já foi claimed" pertence ao domínio.
         /// </summary>
-        internal Claim RegisterClaim(Guid userId, DateTimeOffset serverTimestamp)
+        public Claim RegisterClaim(Guid userId, DateTimeOffset serverTimestamp)
         {
             var position = _claims.Count + 1;
             var claim = new Claim(Id, userId, serverTimestamp, position);

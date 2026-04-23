@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Kureimo.Domain\Kureimo.Domain.csproj" />
   </ItemGroup>
 
