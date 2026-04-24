@@ -98,6 +98,9 @@ namespace Kureimo.Infra.Persistence.Repositories
             => await _context.Photocards
                 .Include(p => p.Claims)
                 .FirstOrDefaultAsync(p => p.Id == id, ct);
+
+        public async Task AddAsync(Photocard photocard, CancellationToken ct = default)
+            => await _context.Photocards.AddAsync(photocard, ct);
     }
 
     public class ClaimRepository : IClaimRepository

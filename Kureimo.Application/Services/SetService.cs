@@ -16,6 +16,7 @@ namespace Kureimo.Application.Services
     public class SetService
     {
         private readonly ISetRepository _setRepository;
+        private readonly IPhotocardRepository _photocardRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SetService> _logger;
@@ -23,11 +24,13 @@ namespace Kureimo.Application.Services
         public SetService(
             ISetRepository setRepository,
             IUserRepository userRepository,
+            IPhotocardRepository photocardRepository,
             IUnitOfWork unitOfWork,
             ILogger<SetService> logger)
         {
             _setRepository = setRepository;
             _userRepository = userRepository;
+            _photocardRepository = photocardRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
@@ -69,11 +72,7 @@ namespace Kureimo.Application.Services
             return sets.Select(MapToDto);
         }
 
-        public async Task<PhotocardDto> AddPhotocardAsync(
-            string accessToken,
-            AddPhotocardDto dto,
-            Guid requestingUserId,
-            CancellationToken ct = default)
+        public async Task<PhotocardDto> AddPhotocardAsync(string accessToken, AddPhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByIdAsync(
                 await ResolveSetIdFromToken(accessToken, ct), ct)
@@ -83,7 +82,7 @@ namespace Kureimo.Application.Services
 
             var photocard = set.AddPhotocard(dto.ArtistName, dto.Version, dto.ImageUrl);
 
-            _setRepository.Update(set);
+            await _photocardRepository.AddAsync(photocard, ct);
             await _unitOfWork.CommitAsync(ct);
 
             _logger.LogInformation(

@@ -38,6 +38,7 @@ namespace Kureimo.Domain.Repositories
         Task<Photocard?> GetByIdWithClaimsAsync(Guid id, CancellationToken ct = default);
 
         Task<Photocard?> GetByIdAsync(Guid id, CancellationToken ct = default);
+        Task AddAsync(Photocard photocard, CancellationToken ct = default);
     }
 
     public interface IClaimRepository
