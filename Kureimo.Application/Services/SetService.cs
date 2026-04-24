@@ -94,7 +94,7 @@ namespace Kureimo.Application.Services
 
         public async Task PublishAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
