@@ -16,6 +16,7 @@ namespace Kureimo.Application.Services
         private readonly ISetRepository _setRepository;
         private readonly IPhotocardRepository _photocardRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IClaimRepository _claimRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRealtimeNotificationService _notificationService;
         private readonly ILogger<ClaimService> _logger;
@@ -27,6 +28,7 @@ namespace Kureimo.Application.Services
             ISetRepository setRepository,
             IPhotocardRepository photocardRepository,
             IUserRepository userRepository,
+            IClaimRepository claimRepository,
             IUnitOfWork unitOfWork,
             IRealtimeNotificationService notificationService,
             ILogger<ClaimService> logger)
@@ -34,6 +36,7 @@ namespace Kureimo.Application.Services
             _setRepository = setRepository;
             _photocardRepository = photocardRepository;
             _userRepository = userRepository;
+            _claimRepository = claimRepository;
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _logger = logger;
@@ -127,6 +130,7 @@ namespace Kureimo.Application.Services
             // Domínio registra o claim com o timestamp do servidor
             var claim = photocard.RegisterClaim(userId, serverTimestamp);
 
+            await _claimRepository.AddAsync(claim, ct);
             await _unitOfWork.CommitAsync(ct);
 
             _logger.LogInformation(

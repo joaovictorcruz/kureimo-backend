@@ -87,6 +87,10 @@ namespace Kureimo.Infra.Persistence.Config
                 .WithOne()
                 .HasForeignKey(p => p.SetId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(s => s.Photocards)
+                .HasField("_photocards")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 
@@ -121,6 +125,10 @@ namespace Kureimo.Infra.Persistence.Config
                 .WithOne()
                 .HasForeignKey(c => c.PhotocardId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Navigation(p => p.Claims)
+                .HasField("_claims")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 

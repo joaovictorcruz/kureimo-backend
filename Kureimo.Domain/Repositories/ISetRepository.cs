@@ -45,5 +45,6 @@ namespace Kureimo.Domain.Repositories
     {
         Task<IEnumerable<Entities.Claim>> GetByPhotocardIdAsync(Guid photocardId, CancellationToken ct = default);
         Task<Entities.Claim?> GetByUserAndPhotocardAsync(Guid userId, Guid photocardId, CancellationToken ct = default);
+        Task AddAsync(Entities.Claim claim, CancellationToken ct = default);
     }
 }

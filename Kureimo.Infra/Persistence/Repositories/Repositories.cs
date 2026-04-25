@@ -121,5 +121,8 @@ namespace Kureimo.Infra.Persistence.Repositories
         public async Task<Claim?> GetByUserAndPhotocardAsync(Guid userId, Guid photocardId, CancellationToken ct = default)
             => await _context.Claims
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.PhotocardId == photocardId, ct);
+
+        public async Task AddAsync(Claim claim, CancellationToken ct = default)
+            => await _context.Claims.AddAsync(claim, ct);
     }
 }
