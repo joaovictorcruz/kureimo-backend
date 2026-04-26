@@ -45,11 +45,13 @@ namespace Kureimo.API.Controllers
         /// <response code="200">Lista de sets do GON.</response>
         [HttpGet("mine")]
         [Authorize(Roles = "Gon,Admin")]
-        [ProducesResponseType(typeof(IEnumerable<SetDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetMySets(CancellationToken ct)
+        [ProducesResponseType(typeof(PagedResultDto<SetDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMySets(
+            [FromQuery] PaginationDto pagination,
+            CancellationToken ct)
         {
             var gonId = User.GetUserId();
-            var result = await _setService.GetMySetssAsync(gonId, ct);
+            var result = await _setService.GetMySetsAsync(gonId, pagination, ct);
             return Ok(result);
         }
 

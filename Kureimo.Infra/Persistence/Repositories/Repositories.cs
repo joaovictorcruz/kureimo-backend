@@ -66,11 +66,21 @@ namespace Kureimo.Infra.Persistence.Repositories
                     .ThenInclude(p => p.Claims)
                 .FirstOrDefaultAsync(s => s.AccessToken == accessToken, ct);
 
-        public async Task<IEnumerable<Set>> GetByGonIdAsync(Guid gonId, CancellationToken ct = default)
-            => await _context.Sets
-                .Where(s => s.GonId == gonId)
-                .OrderByDescending(s => s.CreatedAt)
+        public async Task<(IEnumerable<Set> Items, int TotalCount)> GetByGonIdAsync(Guid gonId, int page, int pageSize, CancellationToken ct = default)
+        {
+            var query = _context.Sets
+        .Where(s => s.GonId == gonId)
+        .OrderByDescending(s => s.CreatedAt);
+
+            var totalCount = await query.CountAsync(ct);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync(ct);
+
+            return (items, totalCount);
+        }
 
         public async Task AddAsync(Set set, CancellationToken ct = default)
             => await _context.Sets.AddAsync(set, ct);

@@ -66,10 +66,23 @@ namespace Kureimo.Application.Services
             return MapToDetailDto(set);
         }
 
-        public async Task<IEnumerable<SetDto>> GetMySetssAsync(Guid gonId, CancellationToken ct = default)
+        public async Task<PagedResultDto<SetDto>> GetMySetsAsync(
+            Guid gonId,
+            PaginationDto pagination,
+            CancellationToken ct = default)
         {
-            var sets = await _setRepository.GetByGonIdAsync(gonId, ct);
-            return sets.Select(MapToDto);
+            var pageSize = Math.Clamp(pagination.PageSize, 1, 50); 
+            var page = Math.Max(pagination.Page, 1);
+
+            var (items, totalCount) = await _setRepository.GetByGonIdAsync(gonId, page, pageSize, ct);
+
+            return new PagedResultDto<SetDto>(
+                Items: items.Select(MapToDto),
+                Page: page,
+                PageSize: pageSize,
+                TotalCount: totalCount,
+                TotalPages: (int)Math.Ceiling(totalCount / (double)pageSize)
+            );
         }
 
         public async Task<PhotocardDto> AddPhotocardAsync(string accessToken, AddPhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
