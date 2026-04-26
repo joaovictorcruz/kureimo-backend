@@ -122,7 +122,8 @@ namespace Kureimo.Infra.Persistence.Config
             // Quando dois usuários tentam dar claim ao mesmo tempo,
             // o banco detecta que o xmin mudou e o segundo recebe conflito.
             // Não precisamos de nenhuma propriedade na entidade — o Npgsql cuida disso.
-            builder.UseXminAsConcurrencyToken();
+            builder.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate()
+                .IsRowVersion();
 
             // Um photocard tem muitos claims
             builder.HasMany(p => p.Claims)
