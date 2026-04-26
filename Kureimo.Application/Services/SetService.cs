@@ -44,7 +44,7 @@ namespace Kureimo.Application.Services
                 throw new UnauthorizedDomainException();
 
             // O domínio valida o título e o horário internamente
-            var set = new Set(dto.Title, gonId, dto.ClaimOpensAt, dto.Description);
+            var set = new Set(dto.Title, gonId, dto.ImageUrl, dto.ClaimOpensAt, dto.Description);
 
             await _setRepository.AddAsync(set, ct);
             await _unitOfWork.CommitAsync(ct);
@@ -80,7 +80,7 @@ namespace Kureimo.Application.Services
 
             EnsureIsOwner(set, requestingUserId);
 
-            var photocard = set.AddPhotocard(dto.ArtistName, dto.Version, dto.ImageUrl);
+            var photocard = set.AddPhotocard(dto.ArtistName, dto.Version);
 
             await _photocardRepository.AddAsync(photocard, ct);
             await _unitOfWork.CommitAsync(ct);
@@ -150,6 +150,9 @@ namespace Kureimo.Application.Services
             if (dto.ClaimOpensAt.HasValue)
                 set.UpdateClaimOpensAt(dto.ClaimOpensAt.Value);
 
+            if (dto.ImageUrl is not null)
+                set.UpdateImageUrl(dto.ImageUrl);
+
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
         }
@@ -175,6 +178,7 @@ namespace Kureimo.Application.Services
                 set.Description,
                 set.AccessToken,
                 set.Status.ToString(),
+                set.ImageUrl,
                 set.ClaimOpensAt,
                 set.Photocards.Count,
                 set.CreatedAt);
@@ -185,17 +189,17 @@ namespace Kureimo.Application.Services
                 set.Description,
                 set.AccessToken,
                 set.Status.ToString(),
+                set.ImageUrl,
                 set.ClaimOpensAt,
                 set.Photocards.Select(MapToPhotocardDetailDto));
 
         private static PhotocardDto MapToPhotocardDto(Photocard pc) =>
-            new(pc.Id, pc.ArtistName, pc.Version, pc.ImageUrl, pc.TotalClaims);
+            new(pc.Id, pc.ArtistName, pc.Version, pc.TotalClaims);
 
         private static PhotocardDetailDto MapToPhotocardDetailDto(Photocard pc) =>
             new(pc.Id,
                 pc.ArtistName,
                 pc.Version,
-                pc.ImageUrl,
                 pc.Claims.Select(c => new ClaimDto(
                     c.Id,
                     c.PhotocardId,

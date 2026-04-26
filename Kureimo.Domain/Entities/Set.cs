@@ -12,6 +12,7 @@ namespace Kureimo.Domain.Entities
     {
         public string Title { get; private set; }
         public string? Description { get; private set; }
+        public string ImageUrl { get; private set; }
         public Guid GonId { get; private set; }
 
         /// <summary>
@@ -32,29 +33,37 @@ namespace Kureimo.Domain.Entities
 
         private Set() { }
 
-        public Set(string title, Guid gonId, DateTimeOffset claimOpensAt, string? description = null)
+        public Set(string title, Guid gonId, string imageUrl, DateTimeOffset claimOpensAt, string? description = null)
         {
             ValidateTitle(title);
             ValidateClaimOpensAt(claimOpensAt);
 
             Title = title.Trim();
             Description = description?.Trim();
+            ImageUrl = imageUrl.Trim();
             GonId = gonId;
             ClaimOpensAt = claimOpensAt;
             AccessToken = GenerateAccessToken();
             Status = SetStatus.Draft;
         }
 
-        public Photocard AddPhotocard(string artistName, string version, string imageUrl)
+        public Photocard AddPhotocard(string artistName, string version)
         {
             if (Status == SetStatus.Closed)
                 throw new DomainException("Não é possível adicionar photocards a um set encerrado.");
 
-            var photocard = new Photocard(Id, artistName, version, imageUrl);
+            var photocard = new Photocard(Id, artistName, version);
             _photocards.Add(photocard);
             SetUpdatedAt();
 
             return photocard;
+        }
+
+        public void UpdateImageUrl(string imageUrl)
+        {
+            ValidateImageUrl(imageUrl);
+            ImageUrl = imageUrl.Trim();
+            SetUpdatedAt();
         }
 
         public void Publish()
@@ -114,7 +123,7 @@ namespace Kureimo.Domain.Entities
 
         public bool IsClaimOpen()
         {
-            return Status == SetStatus.Open && DateTimeOffset.UtcNow >= ClaimOpensAt;
+            return Status == SetStatus.Open;
         }
 
         private static void ValidateTitle(string title)
@@ -140,6 +149,12 @@ namespace Kureimo.Domain.Entities
                 .Replace("+", "-")
                 .Replace("=", "")
                 [..12];
+        }
+
+        private static void ValidateImageUrl(string imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+                throw new DomainException("A URL da imagem do set não pode ser vazia.");
         }
     }
 }

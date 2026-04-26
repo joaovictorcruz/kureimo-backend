@@ -70,6 +70,9 @@ namespace Kureimo.Infra.Persistence.Config
                 .IsRequired()
                 .HasConversion<string>();
 
+            builder.Property(s => s.ImageUrl)
+                .IsRequired();
+
             builder.Property(s => s.CreatedAt).IsRequired();
             builder.Property(s => s.UpdatedAt);
 
@@ -107,9 +110,6 @@ namespace Kureimo.Infra.Persistence.Config
             builder.Property(p => p.Version)
                 .IsRequired()
                 .HasMaxLength(100);
-
-            builder.Property(p => p.ImageUrl)
-                .IsRequired();
 
             builder.Property(p => p.CreatedAt).IsRequired();
 

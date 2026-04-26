@@ -9,19 +9,20 @@ namespace Kureimo.Application.DTOs
     public record CreateSetDto(
         string Title,
         string? Description,
-        DateTimeOffset ClaimOpensAt
+        DateTimeOffset ClaimOpensAt,
+        string ImageUrl
     );
 
     public record UpdateSetDto(
         string? Title,
         string? Description,
-        DateTimeOffset? ClaimOpensAt
+        DateTimeOffset? ClaimOpensAt,
+        string ImageUrl
     );
 
     public record AddPhotocardDto(
         string ArtistName,
-        string Version,
-        string ImageUrl
+        string Version
     );
 
     // Resposta resumida — usada na listagem dos sets do GON
@@ -31,6 +32,7 @@ namespace Kureimo.Application.DTOs
         string? Description,
         string AccessToken,
         string Status,
+        string ImageUrl,
         DateTimeOffset ClaimOpensAt,
         int TotalPhotocards,
         DateTimeOffset CreatedAt
@@ -43,6 +45,7 @@ namespace Kureimo.Application.DTOs
         string? Description,
         string AccessToken,
         string Status,
+        string ImageUrl,
         DateTimeOffset ClaimOpensAt,
         IEnumerable<PhotocardDetailDto> Photocards
     );
@@ -51,7 +54,6 @@ namespace Kureimo.Application.DTOs
         Guid Id,
         string ArtistName,
         string Version,
-        string ImageUrl,
         int TotalClaims
     );
 
@@ -59,7 +61,6 @@ namespace Kureimo.Application.DTOs
         Guid Id,
         string ArtistName,
         string Version,
-        string ImageUrl,
         IEnumerable<ClaimDto> Claims
     );
 }

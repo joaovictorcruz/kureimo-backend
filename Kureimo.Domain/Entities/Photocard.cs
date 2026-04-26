@@ -15,8 +15,6 @@ namespace Kureimo.Domain.Entities
 
         public string Version { get; private set; }
 
-        public string ImageUrl { get; private set; }
-
         private readonly List<Claim> _claims = new();
         public IReadOnlyCollection<Claim> Claims => _claims.AsReadOnly();
 
@@ -29,16 +27,14 @@ namespace Kureimo.Domain.Entities
         // EF Core constructor
         private Photocard() { }
 
-        internal Photocard(Guid setId, string artistName, string version, string imageUrl)
+        internal Photocard(Guid setId, string artistName, string version)
         {
             ValidateArtistName(artistName);
             ValidateVersion(version);
-            ValidateImageUrl(imageUrl);
 
             SetId = setId;
             ArtistName = artistName.Trim();
             Version = version.Trim();
-            ImageUrl = imageUrl.Trim();
         }
 
         /// <summary>
@@ -78,12 +74,6 @@ namespace Kureimo.Domain.Entities
 
             if (version.Trim().Length > 100)
                 throw new DomainException("A versão deve ter no máximo 100 caracteres.");
-        }
-
-        private static void ValidateImageUrl(string imageUrl)
-        {
-            if (string.IsNullOrWhiteSpace(imageUrl))
-                throw new DomainException("A URL da imagem não pode ser vazia.");
         }
     }
 }
