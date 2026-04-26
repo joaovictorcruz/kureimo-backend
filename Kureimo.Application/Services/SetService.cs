@@ -54,14 +54,20 @@ namespace Kureimo.Application.Services
             return MapToDto(set);
         }
 
-        public async Task<SetDetailDto> GetByAccessTokenAsync(string accessToken, CancellationToken ct = default)
+        public async Task<SetDetailDto> GetByAccessTokenAsync(string accessToken, Guid requestingUserId, string requestingUserRole, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             // Sets em Draft não são acessíveis via link ainda
             if (set.Status == SetStatus.Draft)
-                throw new SetNotFoundException(accessToken);
+            {
+                var isOwner = set.GonId == requestingUserId;
+                var isPrivileged = requestingUserRole == "Gon" || requestingUserRole == "Admin";
+
+                if (!isPrivileged || !isOwner)
+                    throw new SetNotFoundException(accessToken);
+            }
 
             return MapToDetailDto(set);
         }

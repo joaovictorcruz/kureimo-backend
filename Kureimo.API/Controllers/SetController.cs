@@ -4,6 +4,7 @@ using Kureimo.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Kureimo.API.Controllers
 {
@@ -35,7 +36,10 @@ namespace Kureimo.API.Controllers
             [FromRoute] string accessToken,
             CancellationToken ct)
         {
-            var result = await _setService.GetByAccessTokenAsync(accessToken, ct);
+            var userId = User.GetUserId();
+            var role = User.FindFirstValue(ClaimTypes.Role)!;
+
+            var result = await _setService.GetByAccessTokenAsync(accessToken, userId, role, ct);
             return Ok(result);
         }
 
