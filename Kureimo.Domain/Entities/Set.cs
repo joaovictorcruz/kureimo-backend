@@ -29,6 +29,7 @@ namespace Kureimo.Domain.Entities
         public SetStatus Status { get; private set; }
 
         private readonly List<Photocard> _photocards = new();
+        public DateTimeOffset? DeletedAt { get; private set; }
         public IReadOnlyCollection<Photocard> Photocards => _photocards.AsReadOnly();
 
         private Set() { }
@@ -110,6 +111,18 @@ namespace Kureimo.Domain.Entities
         {
             ValidateTitle(title);
             Title = title.Trim();
+            SetUpdatedAt();
+        }
+
+        public void SoftDelete()
+        {
+            if (Status != SetStatus.Closed)
+                throw new DomainException("Apenas sets encerrados podem ser removidos do histórico.");
+
+            if (DeletedAt.HasValue)
+                throw new DomainException("Este set já foi removido.");
+
+            DeletedAt = DateTimeOffset.UtcNow;
             SetUpdatedAt();
         }
 

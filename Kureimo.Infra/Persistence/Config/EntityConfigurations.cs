@@ -76,6 +76,8 @@ namespace Kureimo.Infra.Persistence.Config
             builder.Property(s => s.CreatedAt).IsRequired();
             builder.Property(s => s.UpdatedAt);
 
+            builder.Property(s => s.DeletedAt);
+
             // AccessToken precisa ser único — é o link público do set
             builder.HasIndex(s => s.AccessToken).IsUnique();
 
@@ -90,6 +92,8 @@ namespace Kureimo.Infra.Persistence.Config
                 .WithOne()
                 .HasForeignKey(p => p.SetId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasQueryFilter(s => s.DeletedAt == null);
 
             builder.Navigation(s => s.Photocards)
                 .HasField("_photocards")

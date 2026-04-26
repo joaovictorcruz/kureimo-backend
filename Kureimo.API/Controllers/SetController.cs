@@ -173,5 +173,42 @@ namespace Kureimo.API.Controllers
             await _setService.CloseAsync(accessToken, gonId, ct);
             return NoContent();
         }
+
+        /// <summary>
+        /// Remove um set específico do histórico (soft delete).
+        /// O set precisa estar com status Closed.
+        /// </summary>
+        /// <response code="204">Set removido do histórico.</response>
+        /// <response code="400">Set não está encerrado.</response>
+        /// <response code="403">Não é o dono do set.</response>
+        /// <response code="404">Set não encontrado.</response>
+        [HttpDelete("{accessToken}")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CleanById(
+            [FromRoute] string accessToken,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            await _setService.SoftDeleteAsync(accessToken, gonId, ct);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Remove todos os sets fechados do GON autenticado (limpar histórico).
+        /// </summary>
+        /// <response code="204">Histórico limpo.</response>
+        [HttpDelete("history")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> CleanHistory(CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            await _setService.SoftDeleteAllClosedAsync(gonId, ct);
+            return NoContent();
+        }
     }
 }

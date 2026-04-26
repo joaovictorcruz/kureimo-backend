@@ -157,6 +157,29 @@ namespace Kureimo.Application.Services
             await _unitOfWork.CommitAsync(ct);
         }
 
+        public async Task SoftDeleteAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            set.SoftDelete(); // domínio garante que só Closed pode ser deletado
+
+            _setRepository.Update(set);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Set removido do histórico: {SetId} por GOM {GonId}", set.Id, requestingUserId);
+        }
+
+        public async Task SoftDeleteAllClosedAsync(Guid gonId, CancellationToken ct = default)
+        {
+            await _setRepository.SoftDeleteAllClosedByGonIdAsync(gonId, ct);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Histórico de sets fechados limpo para GOM {GonId}", gonId);
+        }
+
         // Garante que quem está operando é o dono do set
         private static void EnsureIsOwner(Set set, Guid requestingUserId)
         {

@@ -1,4 +1,5 @@
 ﻿using Kureimo.Domain.Entities;
+using Kureimo.Domain.Enums;
 using Kureimo.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -73,6 +74,22 @@ namespace Kureimo.Infra.Persistence.Repositories
 
         public async Task AddAsync(Set set, CancellationToken ct = default)
             => await _context.Sets.AddAsync(set, ct);
+
+        public async Task<IEnumerable<Set>> GetClosedByGonIdAsync(Guid gonId, CancellationToken ct = default)
+            => await _context.Sets
+                .Where(s => s.GonId == gonId && s.Status == SetStatus.Closed)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync(ct);
+
+        public async Task SoftDeleteAllClosedByGonIdAsync(Guid gonId, CancellationToken ct = default)
+        {
+            var closedSets = await _context.Sets
+                .Where(s => s.GonId == gonId && s.Status == SetStatus.Closed)
+                .ToListAsync(ct);
+
+            foreach (var set in closedSets)
+                set.SoftDelete();
+        }
 
         public void Update(Set set)
             => _context.Sets.Update(set);
