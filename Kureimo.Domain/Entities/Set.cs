@@ -31,6 +31,7 @@ namespace Kureimo.Domain.Entities
         private readonly List<Photocard> _photocards = new();
         public DateTimeOffset? DeletedAt { get; private set; }
         public IReadOnlyCollection<Photocard> Photocards => _photocards.AsReadOnly();
+        private const int MinutesBeforeClaim = 10;
 
         private Set() { }
 
@@ -75,6 +76,9 @@ namespace Kureimo.Domain.Entities
             if (!_photocards.Any())
                 throw new DomainException("O set precisa ter ao menos um photocard para ser publicado.");
 
+            if (ClaimOpensAt <= DateTimeOffset.UtcNow)
+                ClaimOpensAt = DateTimeOffset.UtcNow.AddMinutes(15);
+
             Status = SetStatus.Published;
             SetUpdatedAt();
         }
@@ -101,6 +105,9 @@ namespace Kureimo.Domain.Entities
         {
             if (Status == SetStatus.Open || Status == SetStatus.Closed)
                 throw new DomainException("Não é possível alterar o horário de um set já aberto ou encerrado.");
+
+            if ((claimOpensAt - DateTimeOffset.UtcNow).TotalMinutes < MinutesBeforeClaim)
+                throw new DomainException($"O horário de claim deve ser pelo menos {MinutesBeforeClaim} minutos no futuro.");
 
             ValidateClaimOpensAt(claimOpensAt);
             ClaimOpensAt = claimOpensAt;

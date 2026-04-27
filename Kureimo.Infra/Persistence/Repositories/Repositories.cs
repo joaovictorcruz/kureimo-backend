@@ -69,8 +69,9 @@ namespace Kureimo.Infra.Persistence.Repositories
         public async Task<(IEnumerable<Set> Items, int TotalCount)> GetByGonIdAsync(Guid gonId, int page, int pageSize, CancellationToken ct = default)
         {
             var query = _context.Sets
-        .Where(s => s.GonId == gonId)
-        .OrderByDescending(s => s.CreatedAt);
+                .Include(s => s.Photocards)
+                .Where(s => s.GonId == gonId)
+                .OrderByDescending(s => s.CreatedAt);
 
             var totalCount = await query.CountAsync(ct);
 
