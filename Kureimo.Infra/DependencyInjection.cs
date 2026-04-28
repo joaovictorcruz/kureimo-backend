@@ -150,5 +150,13 @@ namespace Kureimo.Infra
 
             return services;
         }
+
+        public static IServiceCollection AddInfrastructureForWorker(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDatabase(configuration).AddRepositories();
+
+            return services;
+        }
+
     }
 }

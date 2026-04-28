@@ -19,6 +19,7 @@ namespace Kureimo.Application.Services
         private readonly IPhotocardRepository _photocardRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IRealtimeNotificationService _notificationService;
         private readonly ILogger<SetService> _logger;
 
         public SetService(
@@ -26,12 +27,14 @@ namespace Kureimo.Application.Services
             IUserRepository userRepository,
             IPhotocardRepository photocardRepository,
             IUnitOfWork unitOfWork,
+            IRealtimeNotificationService notificationService,
             ILogger<SetService> logger)
         {
             _setRepository = setRepository;
             _userRepository = userRepository;
             _photocardRepository = photocardRepository;
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
             _logger = logger;
         }
 
@@ -212,6 +215,17 @@ namespace Kureimo.Application.Services
             var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
                 ?? throw new SetNotFoundException(accessToken);
             return set.Id;
+        }
+
+        /// <summary>
+        /// Chamado pelo Worker via endpoint interno após persistir o Open no banco.
+        /// Responsabilidade exclusiva: disparar o SignalR para os collectors.
+        /// </summary>
+        public async Task NotifySetOpenedAsync(string accessToken, CancellationToken ct = default)
+        {
+            await _notificationService.NotifySetStatusChangedAsync(accessToken, "Open", ct);
+
+            _logger.LogInformation("Notificação SignalR disparada para set {AccessToken}", accessToken);
         }
 
         private static SetDto MapToDto(Set set) =>

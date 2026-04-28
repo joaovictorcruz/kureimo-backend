@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Novo Perfil",
+    "Projects": [
+      {
+        "Path": "Kureimo.API\\Kureimo.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Kureimo.Worker\\Kureimo.Worker.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

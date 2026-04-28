@@ -143,7 +143,7 @@ namespace Kureimo.Domain.Entities
 
         public bool IsClaimOpen()
         {
-            return Status == SetStatus.Open;
+            return Status == SetStatus.Open || (Status == SetStatus.Published && DateTimeOffset.UtcNow >= ClaimOpensAt);
         }
 
         private static void ValidateTitle(string title)
@@ -159,6 +159,9 @@ namespace Kureimo.Domain.Entities
         {
             if (claimOpensAt <= DateTimeOffset.UtcNow)
                 throw new DomainException("O horário de abertura deve ser no futuro.");
+
+            if ((claimOpensAt - DateTimeOffset.UtcNow).TotalMinutes < MinutesBeforeClaim)
+                throw new DomainException($"O horário de claim deve ser pelo menos {MinutesBeforeClaim} minutos no futuro.");
         }
 
         private static string GenerateAccessToken()

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kureimo.Application", "Kure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kureimo.Infra", "Kureimo.Infra\Kureimo.Infra.csproj", "{45FD971E-06C5-4880-B747-1252B567D00E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kureimo.Worker", "Kureimo.Worker\Kureimo.Worker.csproj", "{AC1C0BCF-7D5E-4AD2-A964-DC26B19B7D93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{45FD971E-06C5-4880-B747-1252B567D00E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45FD971E-06C5-4880-B747-1252B567D00E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45FD971E-06C5-4880-B747-1252B567D00E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC1C0BCF-7D5E-4AD2-A964-DC26B19B7D93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC1C0BCF-7D5E-4AD2-A964-DC26B19B7D93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC1C0BCF-7D5E-4AD2-A964-DC26B19B7D93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC1C0BCF-7D5E-4AD2-A964-DC26B19B7D93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

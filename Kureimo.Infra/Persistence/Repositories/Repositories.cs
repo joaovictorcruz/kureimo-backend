@@ -102,6 +102,12 @@ namespace Kureimo.Infra.Persistence.Repositories
                 set.SoftDelete();
         }
 
+        public async Task<IEnumerable<Set>> GetPublishedDueForOpenAsync(CancellationToken ct = default)
+            => await _context.Sets
+                .Where(s => s.Status == SetStatus.Published
+                         && s.ClaimOpensAt <= DateTimeOffset.UtcNow)
+                .ToListAsync(ct);
+
         public void Update(Set set)
             => _context.Sets.Update(set);
     }

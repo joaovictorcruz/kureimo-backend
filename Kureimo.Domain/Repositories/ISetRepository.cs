@@ -28,6 +28,7 @@ namespace Kureimo.Domain.Repositories
         Task AddAsync(Set set, CancellationToken ct = default);
         void Update(Set set);
         Task<IEnumerable<Set>> GetClosedByGonIdAsync(Guid gonId, CancellationToken ct = default);
+        Task<IEnumerable<Set>> GetPublishedDueForOpenAsync(CancellationToken ct = default);
         Task SoftDeleteAllClosedByGonIdAsync(Guid gonId, CancellationToken ct = default);
     }
 
