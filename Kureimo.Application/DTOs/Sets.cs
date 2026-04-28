@@ -10,14 +10,20 @@ namespace Kureimo.Application.DTOs
         string Title,
         string? Description,
         DateTimeOffset ClaimOpensAt,
-        string ImageUrl
+        string ImageUrl,
+        string BackgroundColor,
+        string FontColor,
+        string FontStyle
     );
 
     public record UpdateSetDto(
         string? Title,
         string? Description,
         DateTimeOffset? ClaimOpensAt,
-        string ImageUrl
+        string? ImageUrl,
+        string? BackgroundColor,
+        string? FontColor,
+        string? FontStyle
     );
 
     public record AddPhotocardDto(
@@ -33,6 +39,9 @@ namespace Kureimo.Application.DTOs
         string AccessToken,
         string Status,
         string ImageUrl,
+        string BackgroundColor,
+        string FontColor,
+        string FontStyle,
         DateTimeOffset ClaimOpensAt,
         int TotalPhotocards,
         DateTimeOffset CreatedAt
@@ -46,6 +55,9 @@ namespace Kureimo.Application.DTOs
         string AccessToken,
         string Status,
         string ImageUrl,
+        string BackgroundColor,
+        string FontColor,
+        string FontStyle,
         DateTimeOffset ClaimOpensAt,
         IEnumerable<PhotocardDetailDto> Photocards
     );

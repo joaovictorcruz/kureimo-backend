@@ -32,10 +32,14 @@ namespace Kureimo.Domain.Entities
         public DateTimeOffset? DeletedAt { get; private set; }
         public IReadOnlyCollection<Photocard> Photocards => _photocards.AsReadOnly();
         private const int MinutesBeforeClaim = 10;
+        public DateTimeOffset? CancelledAt { get; private set; }
+        public string BackgroundColor { get; private set; } = "#FFFFFF";
+        public string FontColor { get; private set; } = "#000000";
+        public string FontStyle { get; private set; } = "Inter";
 
         private Set() { }
 
-        public Set(string title, Guid gonId, string imageUrl, DateTimeOffset claimOpensAt, string? description = null)
+        public Set(string title, Guid gonId, string imageUrl, string backgroundColor, string fontColor, string fontStyle, DateTimeOffset claimOpensAt, string? description = null)
         {
             ValidateTitle(title);
             ValidateClaimOpensAt(claimOpensAt);
@@ -44,6 +48,9 @@ namespace Kureimo.Domain.Entities
             Description = description?.Trim();
             ImageUrl = imageUrl.Trim();
             GonId = gonId;
+            BackgroundColor = backgroundColor.Trim();
+            FontColor = fontColor.Trim();
+            FontStyle = fontStyle.Trim();
             ClaimOpensAt = claimOpensAt;
             AccessToken = GenerateAccessToken();
             Status = SetStatus.Draft;
@@ -97,7 +104,25 @@ namespace Kureimo.Domain.Entities
             if (Status == SetStatus.Closed)
                 throw new DomainException("Set já está encerrado.");
 
+            if (Status != SetStatus.Open)
+                throw new DomainException("Apenas sets abertos podem ser encerrados.");
+
+            if (DateTimeOffset.UtcNow < ClaimOpensAt.AddMinutes(1))
+                throw new DomainException("O set precisa ficar aberto por pelo menos 1 minuto antes de ser encerrado.");
+
             Status = SetStatus.Closed;
+            SetUpdatedAt();
+        }
+
+        public void Cancel()
+        {
+            if (Status == SetStatus.Closed)
+                throw new DomainException("Sets encerrados não podem ser cancelados. Use a opção de limpar histórico.");
+
+            if (CancelledAt.HasValue)
+                throw new DomainException("Este set já foi cancelado.");
+
+            CancelledAt = DateTimeOffset.UtcNow;
             SetUpdatedAt();
         }
 
@@ -118,6 +143,27 @@ namespace Kureimo.Domain.Entities
         {
             ValidateTitle(title);
             Title = title.Trim();
+            SetUpdatedAt();
+        }
+
+        public void UpdateBackgroundColor(string backgroundColor)
+        {
+            ValidateColor(backgroundColor);
+            BackgroundColor = backgroundColor.Trim();
+            SetUpdatedAt();
+        }
+
+        public void UpdateFontColor(string fontColor)
+        {
+            ValidateColor(fontColor);
+            FontColor = fontColor.Trim();
+            SetUpdatedAt();
+        }
+
+        public void UpdateFontStyle(string fontStyle)
+        {
+            ValidateFontStyle(fontStyle);
+            FontStyle = fontStyle.Trim();
             SetUpdatedAt();
         }
 
@@ -178,6 +224,31 @@ namespace Kureimo.Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(imageUrl))
                 throw new DomainException("A URL da imagem do set não pode ser vazia.");
+        }
+
+        private static void ValidateColor(string color)
+        {
+            if (string.IsNullOrWhiteSpace(color))
+                throw new DomainException("A cor não pode ser vazia.");
+
+            // Aceita hex com 3 ou 6 caracteres: #FFF ou #FFFFFF
+            if (!System.Text.RegularExpressions.Regex.IsMatch(color.Trim(), @"^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"))
+                throw new DomainException($"Cor inválida: '{color}'. Use formato hexadecimal como #FFF ou #FFFFFF.");
+        }
+
+        private static void ValidateFontStyle(string fontStyle)
+        {
+            if (string.IsNullOrWhiteSpace(fontStyle))
+                throw new DomainException("O estilo de fonte não pode ser vazio.");
+
+            var allowed = new[]
+            {
+            "Inter", "Roboto", "Poppins", "Montserrat", "Lato",
+            "Nunito", "Raleway", "Playfair Display", "DM Sans", "Space Grotesk"
+            };
+
+            if (!allowed.Contains(fontStyle.Trim()))
+                throw new DomainException($"Fonte inválida. As opções disponíveis são: {string.Join(", ", allowed)}.");
         }
     }
 }

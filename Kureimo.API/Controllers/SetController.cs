@@ -1,6 +1,7 @@
 ﻿using Kureimo.API.Extensions;
 using Kureimo.Application.DTOs;
 using Kureimo.Application.Services;
+using Kureimo.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -200,6 +201,30 @@ namespace Kureimo.API.Controllers
         {
             var gonId = User.GetUserId();
             await _setService.SoftDeleteAsync(accessToken, gonId, ct);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Cancela um set independente do status atual (exceto Closed).
+        /// O set some da listagem do GON imediatamente.
+        /// Diferente do clean-history, funciona para sets que ainda não foram encerrados.
+        /// </summary>
+        /// <response code="204">Set cancelado.</response>
+        /// <response code="400">Set já está encerrado ou já foi cancelado.</response>
+        /// <response code="403">Não é o dono do set.</response>
+        /// <response code="404">Set não encontrado.</response>
+        [HttpDelete("{accessToken}/cancel")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Cancel(
+            [FromRoute] string accessToken,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            await _setService.CancelAsync(accessToken, gonId, ct);
             return NoContent();
         }
 

@@ -47,7 +47,7 @@ namespace Kureimo.Application.Services
                 throw new UnauthorizedDomainException();
 
             // O domínio valida o título e o horário internamente
-            var set = new Set(dto.Title, gonId, dto.ImageUrl, dto.ClaimOpensAt, dto.Description);
+            var set = new Set(dto.Title, gonId, dto.ImageUrl, dto.BackgroundColor, dto.FontColor, dto.FontStyle, dto.ClaimOpensAt, dto.Description);
 
             await _setRepository.AddAsync(set, ct);
             await _unitOfWork.CommitAsync(ct);
@@ -144,6 +144,21 @@ namespace Kureimo.Application.Services
             _logger.LogInformation("Set aberto para claims: {SetId}", set.Id);
         }
 
+        public async Task CancelAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            set.Cancel();
+
+            _setRepository.Update(set);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Set cancelado: {SetId} por GON {GonId}", set.Id, requestingUserId);
+        }
+
         public async Task CloseAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
@@ -174,6 +189,16 @@ namespace Kureimo.Application.Services
 
             if (dto.ImageUrl is not null)
                 set.UpdateImageUrl(dto.ImageUrl);
+
+            if (dto.BackgroundColor is not null)
+                set.UpdateBackgroundColor(dto.BackgroundColor);
+
+            if (dto.FontColor is not null)
+                set.UpdateFontColor(dto.FontColor);
+
+            if (dto.FontStyle is not null)
+                set.UpdateFontStyle(dto.FontStyle);
+
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
@@ -235,6 +260,9 @@ namespace Kureimo.Application.Services
                 set.AccessToken,
                 set.Status.ToString(),
                 set.ImageUrl,
+                set.BackgroundColor,
+                set.FontColor,
+                set.FontStyle,
                 set.ClaimOpensAt,
                 set.Photocards.Count,
                 set.CreatedAt);
@@ -246,6 +274,9 @@ namespace Kureimo.Application.Services
                 set.AccessToken,
                 set.Status.ToString(),
                 set.ImageUrl,
+                set.BackgroundColor,
+                set.FontColor,
+                set.FontStyle,
                 set.ClaimOpensAt,
                 set.Photocards.Select(MapToPhotocardDetailDto));
 
