@@ -12,12 +12,15 @@ namespace Kureimo.Application.DTOs
         string Email,
         string Role,
         bool IsActive,
+        string? PhoneNumber,   
+        string? ProfilePicUrl,  
         DateTimeOffset CreatedAt
     );
 
     public record UpdateUserDto(
         string? Username,
-        string? Email
+        string? Email,
+        string? PhoneNumber
     );
 
     public record UpdatePasswordDto(

@@ -15,10 +15,12 @@ namespace Kureimo.Domain.Entities
         public string PasswordHash { get; private set; }
         public UserRole Role { get; private set; }
         public bool IsActive { get; private set; }
+        public string? PhoneNumber { get; private set; }
+        public string? ProfilePicUrl { get; private set; }
 
         private User() { }
 
-        public User(string username, string email, string passwordHash, UserRole role = UserRole.Collector)
+        public User(string username, string email, string passwordHash, string phoneNumber, UserRole role = UserRole.Collector)
         {
             ValidateUsername(username);
             ValidateEmail(email);
@@ -26,6 +28,7 @@ namespace Kureimo.Domain.Entities
             Username = username.Trim().ToLower();
             Email = email.Trim().ToLower();
             PasswordHash = passwordHash;
+            PhoneNumber = phoneNumber.Trim();
             Role = role;
             IsActive = true;
         }
@@ -50,6 +53,22 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("Password hash não pode ser vazio.");
 
             PasswordHash = passwordHash;
+            SetUpdatedAt();
+        }
+
+        public void UpdatePhoneNumber(string phoneNumber)
+        {
+            ValidatePhoneNumber(phoneNumber);
+            PhoneNumber = phoneNumber.Trim();
+            SetUpdatedAt();
+        }
+
+        public void UpdateProfilePicUrl(string profilePicUrl)
+        {
+            if (string.IsNullOrWhiteSpace(profilePicUrl))
+                throw new DomainException("A URL da foto de perfil não pode ser vazia.");
+
+            ProfilePicUrl = profilePicUrl.Trim();
             SetUpdatedAt();
         }
 
@@ -99,6 +118,17 @@ namespace Kureimo.Domain.Entities
 
             if (!email.Contains('@'))
                 throw new DomainException("Email inválido.");
+        }
+
+        private static void ValidatePhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new DomainException("O número de telefone não pode ser vazio.");
+
+            // Aceita formatos: +5511999999999, 11999999999, (11)99999-9999
+            var digits = System.Text.RegularExpressions.Regex.Replace(phoneNumber, @"\D", "");
+            if (digits.Length < 10 || digits.Length > 13)
+                throw new DomainException("Número de telefone inválido.");
         }
     }
 }

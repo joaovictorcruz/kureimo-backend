@@ -37,6 +37,11 @@ namespace Kureimo.Infra.Persistence.Config
             builder.Property(u => u.CreatedAt).IsRequired();
             builder.Property(u => u.UpdatedAt);
 
+            builder.Property(u => u.PhoneNumber)
+                .HasMaxLength(20); // nullable — sem IsRequired
+
+            builder.Property(u => u.ProfilePicUrl);
+
             // Índices únicos para email e username
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.Username).IsUnique();

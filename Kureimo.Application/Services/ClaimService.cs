@@ -1,4 +1,5 @@
 ﻿using Kureimo.Application.DTOs;
+using Kureimo.Domain.Entities;
 using Kureimo.Domain.Exceptions;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
@@ -87,12 +88,14 @@ namespace Kureimo.Application.Services
 
             var userIds = claims.Claims.Select(c => c.UserId).Distinct().ToList();
             var usernames = new Dictionary<Guid, string>();
+            var phoneNumbers = new Dictionary<Guid, string?>();
 
             foreach (var uid in userIds)
             {
                 var u = await _userRepository.GetByIdAsync(uid, ct);
                 if (u is not null)
                     usernames[uid] = u.Username;
+                    phoneNumbers[uid] = u.PhoneNumber;
             }
 
             return claims.Claims
@@ -102,6 +105,7 @@ namespace Kureimo.Application.Services
                     c.PhotocardId,
                     c.UserId,
                     usernames.GetValueOrDefault(c.UserId, "unknown"),
+                    phoneNumbers.GetValueOrDefault(c.UserId),
                     c.ClaimedAt,
                     c.QueuePosition));
         }
@@ -120,6 +124,9 @@ namespace Kureimo.Application.Services
             // Carrega o set para verificar se o claim está aberto
             var set = await _setRepository.GetByIdAsync(photocard.SetId, ct)
                 ?? throw new SetNotFoundException();
+
+            var user = await _userRepository.GetByIdAsync(userId, ct)
+                ?? throw new UserNotFoundException();
 
             if (!set.IsClaimOpen())
                 throw new ClaimWindowNotOpenException();
@@ -142,6 +149,7 @@ namespace Kureimo.Application.Services
                 claim.PhotocardId,
                 claim.UserId,
                 username,
+                user.PhoneNumber,
                 claim.ClaimedAt,
                 claim.QueuePosition);
 

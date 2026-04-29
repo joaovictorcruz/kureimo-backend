@@ -128,6 +128,6 @@ namespace Kureimo.Application.Services
         }
 
         private static UserDto MapToDto(Domain.Entities.User user) =>
-            new(user.Id, user.Username, user.Email, user.Role.ToString(), user.IsActive, user.CreatedAt);
+            new(user.Id, user.Username, user.Email, user.Role.ToString(), user.IsActive, user.PhoneNumber, user.ProfilePicUrl, user.CreatedAt);
     }
 }

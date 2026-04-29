@@ -10,6 +10,7 @@ namespace Kureimo.Application.DTOs
         string Username,
         string Email,
         string Password,
+        string PhoneNumber,
         bool IsGon = false
     );
 
@@ -22,6 +23,8 @@ namespace Kureimo.Application.DTOs
         string Token,
         string Username,
         string Email,
-        string Role
+        string Role,
+        string? PhoneNumber,    
+        string? ProfilePicUrl  
     );
 }

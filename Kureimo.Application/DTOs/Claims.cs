@@ -11,6 +11,7 @@ namespace Kureimo.Application.DTOs
         Guid PhotocardId,
         Guid UserId,
         string Username,
+        string? PhoneNumber,
         DateTimeOffset ClaimedAt,
         int QueuePosition
     );

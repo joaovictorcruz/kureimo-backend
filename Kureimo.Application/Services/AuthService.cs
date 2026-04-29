@@ -48,9 +48,8 @@ namespace Kureimo.Application.Services
                 throw new UsernameAlreadyInUseException();
 
             var passwordHash = _passwordHasher.Hash(dto.Password);
-
             var role = dto.IsGon ? UserRole.Gon : UserRole.Collector;
-            var user = new User(dto.Username, dto.Email, passwordHash, role);
+            var user = new User(dto.Username, dto.Email, passwordHash, dto.PhoneNumber, role);
 
             await _userRepository.AddAsync(user, ct);
             await _unitOfWork.CommitAsync(ct);
@@ -80,6 +79,6 @@ namespace Kureimo.Application.Services
         }
 
         private static AuthResponseDto MapToAuthResponse(User user, string token) =>
-            new(token, user.Username, user.Email, user.Role.ToString());
+            new(token, user.Username, user.Email, user.Role.ToString(), user.PhoneNumber, user.ProfilePicUrl);
     }
 }

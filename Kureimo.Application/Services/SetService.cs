@@ -292,6 +292,7 @@ namespace Kureimo.Application.Services
                     c.PhotocardId,
                     c.UserId,
                     string.Empty, // username será preenchido se necessário
+                    null,
                     c.ClaimedAt,
                     c.QueuePosition)));
     }
