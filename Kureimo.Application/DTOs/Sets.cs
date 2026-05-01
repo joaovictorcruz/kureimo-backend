@@ -10,7 +10,6 @@ namespace Kureimo.Application.DTOs
         string Title,
         string? Description,
         DateTimeOffset ClaimOpensAt,
-        string ImageUrl,
         string BackgroundColor,
         string FontColor,
         string FontStyle
@@ -59,6 +58,7 @@ namespace Kureimo.Application.DTOs
         string FontColor,
         string FontStyle,
         DateTimeOffset ClaimOpensAt,
+         GonInfoDto Gon,
         IEnumerable<PhotocardDetailDto> Photocards
     );
 
@@ -74,5 +74,11 @@ namespace Kureimo.Application.DTOs
         string ArtistName,
         string Version,
         IEnumerable<ClaimDto> Claims
+    );
+
+    public record GonInfoDto(
+        Guid Id,
+        string Username,
+        string? ProfilePicUrl
     );
 }

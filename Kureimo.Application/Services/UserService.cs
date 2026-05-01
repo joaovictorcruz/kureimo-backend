@@ -17,17 +17,20 @@ namespace Kureimo.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IStorageService _storageService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IPasswordHasher passwordHasher,
+            IStorageService storageService,
             ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
+            _storageService = storageService;
             _logger = logger;
         }
 
@@ -89,6 +92,26 @@ namespace Kureimo.Application.Services
             await _unitOfWork.CommitAsync(ct);
 
             _logger.LogInformation("Senha atualizada: {UserId}", id);
+        }
+
+        public async Task<UserDto> UpdateProfilePicAsync(Guid id, Stream imageStream, string fileName, Guid requestingUserId, CancellationToken ct = default)
+        {
+            if (id != requestingUserId)
+                throw new UnauthorizedDomainException();
+
+            var user = await _userRepository.GetByIdAsync(id, ct)
+                ?? throw new UserNotFoundException();
+
+            var url = await _storageService.UploadProfilePicAsync(imageStream, fileName, id, ct);
+
+            user.UpdateProfilePicUrl(url);
+
+            _userRepository.Update(user);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Foto de perfil atualizada: {UserId}", id);
+
+            return MapToDto(user);
         }
 
         public async Task PromoteToGonAsync(Guid targetUserId, Guid requestingUserId, CancellationToken ct = default)

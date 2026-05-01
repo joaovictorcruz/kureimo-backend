@@ -12,6 +12,7 @@ namespace Kureimo.Application.DTOs
         Guid UserId,
         string Username,
         string? PhoneNumber,
+        string? ProfilePicUrl,
         DateTimeOffset ClaimedAt,
         int QueuePosition
     );

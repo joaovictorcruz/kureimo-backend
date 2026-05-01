@@ -78,6 +78,31 @@ namespace Kureimo.API.Controllers
         }
 
         /// <summary>
+        /// Atualiza a foto de perfil do usuário autenticado.
+        /// Aceita jpg, jpeg, png ou webp. Tamanho máximo: 5MB.
+        /// </summary>
+        /// <response code="200">Foto atualizada. Retorna o UserDto com a nova URL.</response>
+        /// <response code="400">Formato ou tamanho inválido.</response>
+        /// <response code="403">Tentativa de alterar foto de outro usuário.</response>
+        [HttpPut("{id:guid}/profile-pic")]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> UpdateProfilePic(
+            [FromRoute] Guid id,
+            IFormFile file,
+            CancellationToken ct)
+        {
+            var requestingUserId = User.GetUserId();
+
+            await using var stream = file.OpenReadStream();
+            var result = await _userService.UpdateProfilePicAsync(
+                id, stream, file.FileName, requestingUserId, ct);
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Promove um Collector para a role de GON.
         /// Operação exclusiva de Admin.
         /// </summary>

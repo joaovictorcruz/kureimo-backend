@@ -89,6 +89,7 @@ namespace Kureimo.Application.Services
             var userIds = claims.Claims.Select(c => c.UserId).Distinct().ToList();
             var usernames = new Dictionary<Guid, string>();
             var phoneNumbers = new Dictionary<Guid, string?>();
+            var profilePics = new Dictionary<Guid, string?>();
 
             foreach (var uid in userIds)
             {
@@ -96,6 +97,7 @@ namespace Kureimo.Application.Services
                 if (u is not null)
                     usernames[uid] = u.Username;
                     phoneNumbers[uid] = u.PhoneNumber;
+                    profilePics[uid] = u.ProfilePicUrl;
             }
 
             return claims.Claims
@@ -106,6 +108,7 @@ namespace Kureimo.Application.Services
                     c.UserId,
                     usernames.GetValueOrDefault(c.UserId, "unknown"),
                     phoneNumbers.GetValueOrDefault(c.UserId),
+                    profilePics.GetValueOrDefault(c.UserId),
                     c.ClaimedAt,
                     c.QueuePosition));
         }
@@ -150,6 +153,7 @@ namespace Kureimo.Application.Services
                 claim.UserId,
                 username,
                 user.PhoneNumber,
+                user.ProfilePicUrl,
                 claim.ClaimedAt,
                 claim.QueuePosition);
 

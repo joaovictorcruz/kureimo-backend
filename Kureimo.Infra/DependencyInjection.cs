@@ -6,6 +6,7 @@ using Kureimo.Infra.Persistence;
 using Kureimo.Infra.Persistence.Repositories;
 using Kureimo.Infra.Realtime;
 using Kureimo.Infra.Security;
+using Kureimo.Infra.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -147,6 +148,7 @@ namespace Kureimo.Infra
             services.AddScoped<UserService>();
             services.AddScoped<SetService>();
             services.AddScoped<ClaimService>();
+            services.AddScoped<IStorageService, CloudinaryService>();
 
             return services;
         }

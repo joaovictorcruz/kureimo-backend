@@ -70,13 +70,16 @@ namespace Kureimo.API.Controllers
         [HttpPost]
         [Authorize(Roles = "Gon,Admin")]
         [ProducesResponseType(typeof(SetDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Create(
-            [FromBody] CreateSetDto dto,
+            [FromForm] CreateSetDto dto,   
+            IFormFile image,                   
             CancellationToken ct)
         {
             var gonId = User.GetUserId();
-            var result = await _setService.CreateAsync(dto, gonId, ct);
+
+            await using var stream = image.OpenReadStream();
+            var result = await _setService.CreateAsync(dto, stream, image.FileName, gonId, ct);
+
             return StatusCode(StatusCodes.Status201Created, result);
         }
 
@@ -99,6 +102,32 @@ namespace Kureimo.API.Controllers
             var gonId = User.GetUserId();
             await _setService.UpdateAsync(accessToken, dto, gonId, ct);
             return NoContent();
+        }
+
+        /// <summary>
+        /// Atualiza a imagem do set via upload direto.
+        /// Aceita jpg, jpeg, png ou webp. Tamanho máximo: 5MB.
+        /// </summary>
+        /// <response code="200">Imagem atualizada. Retorna o SetDto com a nova URL.</response>
+        /// <response code="400">Formato ou tamanho inválido.</response>
+        /// <response code="403">Não é o dono do set.</response>
+        [HttpPut("{accessToken}/image")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(typeof(SetDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> UpdateSetImage(
+            [FromRoute] string accessToken,
+            IFormFile file,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+
+            await using var stream = file.OpenReadStream();
+            var result = await _setService.UpdateSetImageAsync(
+                accessToken, stream, file.FileName, gonId, ct);
+
+            return Ok(result);
         }
 
         /// <summary>

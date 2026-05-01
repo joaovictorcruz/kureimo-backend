@@ -67,6 +67,11 @@ builder.Services.AddCors(options =>
 // Tudo registrado em Kureimo.Infra/DependencyInjection.cs
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // MAX 5MB
+});
+
 // ── Build ─────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 

@@ -20,6 +20,7 @@ namespace Kureimo.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRealtimeNotificationService _notificationService;
+        private readonly IStorageService _storageService;
         private readonly ILogger<SetService> _logger;
 
         public SetService(
@@ -28,6 +29,7 @@ namespace Kureimo.Application.Services
             IPhotocardRepository photocardRepository,
             IUnitOfWork unitOfWork,
             IRealtimeNotificationService notificationService,
+            IStorageService storageService,
             ILogger<SetService> logger)
         {
             _setRepository = setRepository;
@@ -35,10 +37,11 @@ namespace Kureimo.Application.Services
             _photocardRepository = photocardRepository;
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
+            _storageService = storageService;
             _logger = logger;
         }
 
-        public async Task<SetDto> CreateAsync(CreateSetDto dto, Guid gonId, CancellationToken ct = default)
+        public async Task<SetDto> CreateAsync(CreateSetDto dto, Stream imageStream, string imageFileName, Guid gonId, CancellationToken ct = default)
         {
             var gon = await _userRepository.GetByIdAsync(gonId, ct)
                 ?? throw new UserNotFoundException();
@@ -46,8 +49,12 @@ namespace Kureimo.Application.Services
             if (gon.Role != UserRole.Gon && gon.Role != UserRole.Admin)
                 throw new UnauthorizedDomainException();
 
+            var tempToken = Guid.NewGuid().ToString("N")[..12];
+
+            var imageUrl = await _storageService.UploadSetImageAsync(imageStream, imageFileName, tempToken, ct);
+
             // O domínio valida o título e o horário internamente
-            var set = new Set(dto.Title, gonId, dto.ImageUrl, dto.BackgroundColor, dto.FontColor, dto.FontStyle, dto.ClaimOpensAt, dto.Description);
+            var set = new Set(dto.Title, gonId, imageUrl, dto.BackgroundColor, dto.FontColor, dto.FontStyle, dto.ClaimOpensAt, dto.Description);
 
             await _setRepository.AddAsync(set, ct);
             await _unitOfWork.CommitAsync(ct);
@@ -72,7 +79,10 @@ namespace Kureimo.Application.Services
                     throw new SetNotFoundException(accessToken);
             }
 
-            return MapToDetailDto(set);
+            var gon = await _userRepository.GetByIdAsync(set.GonId, ct)
+                 ?? throw new UserNotFoundException();
+
+            return MapToDetailDto(set, gon);
         }
 
         public async Task<PagedResultDto<SetDto>> GetMySetsAsync(
@@ -204,6 +214,25 @@ namespace Kureimo.Application.Services
             await _unitOfWork.CommitAsync(ct);
         }
 
+        public async Task<SetDto> UpdateSetImageAsync(string accessToken, Stream imageStream, string fileName, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            var url = await _storageService.UploadSetImageAsync(imageStream, fileName, accessToken, ct);
+
+            set.UpdateImageUrl(url);
+
+            _setRepository.Update(set);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Imagem do set atualizada: {SetId}", set.Id);
+
+            return MapToDto(set);
+        }
+
         public async Task SoftDeleteAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
@@ -267,7 +296,7 @@ namespace Kureimo.Application.Services
                 set.Photocards.Count,
                 set.CreatedAt);
 
-        private static SetDetailDto MapToDetailDto(Set set) =>
+        private static SetDetailDto MapToDetailDto(Set set, User gon) =>
             new(set.Id,
                 set.Title,
                 set.Description,
@@ -278,6 +307,7 @@ namespace Kureimo.Application.Services
                 set.FontColor,
                 set.FontStyle,
                 set.ClaimOpensAt,
+                new GonInfoDto(gon.Id, gon.Username, gon.ProfilePicUrl),
                 set.Photocards.Select(MapToPhotocardDetailDto));
 
         private static PhotocardDto MapToPhotocardDto(Photocard pc) =>
@@ -292,6 +322,7 @@ namespace Kureimo.Application.Services
                     c.PhotocardId,
                     c.UserId,
                     string.Empty, // username será preenchido se necessário
+                    null,
                     null,
                     c.ClaimedAt,
                     c.QueuePosition)));
