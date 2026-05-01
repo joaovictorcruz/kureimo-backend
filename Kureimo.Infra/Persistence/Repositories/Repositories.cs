@@ -62,7 +62,7 @@ namespace Kureimo.Infra.Persistence.Repositories
         /// </summary>
         public async Task<Set?> GetByAccessTokenWithDetailsAsync(string accessToken, CancellationToken ct = default)
             => await _context.Sets
-                .Include(s => s.Photocards)
+                .Include(s => s.Photocards.OrderBy(p => p.Order))
                     .ThenInclude(p => p.Claims)
                 .FirstOrDefaultAsync(s => s.AccessToken == accessToken, ct);
 
@@ -135,6 +135,12 @@ namespace Kureimo.Infra.Persistence.Repositories
 
         public async Task AddAsync(Photocard photocard, CancellationToken ct = default)
             => await _context.Photocards.AddAsync(photocard, ct);
+
+        public void Update(Photocard photocard)
+            => _context.Photocards.Update(photocard);
+
+        public void Remove(Photocard photocard)
+            => _context.Photocards.Remove(photocard);
     }
 
     public class ClaimRepository : IClaimRepository

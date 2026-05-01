@@ -1,7 +1,9 @@
 ﻿using Kureimo.API.Middleware;
 using Kureimo.Infra;
 using Kureimo.Infra.Realtime;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +47,31 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    // Política global — 60 requests por minuto por IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    // Política mais restrita para auth — evita brute force
+    options.AddFixedWindowLimiter("auth", authOptions =>
+    {
+        authOptions.PermitLimit = 10;
+        authOptions.Window = TimeSpan.FromMinutes(1);
+        authOptions.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // AllowCredentials() é obrigatório para o SignalR funcionar corretamente.
 // Ajuste a origin conforme o ambiente (dev = Vite, prod = domínio do frontend).
@@ -83,6 +110,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseCors("FrontendPolicy");
 

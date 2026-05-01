@@ -151,6 +151,68 @@ namespace Kureimo.API.Controllers
             return StatusCode(StatusCodes.Status201Created, result);
         }
 
+        /// <summary>
+        /// Edita artistName e version de um photocard.
+        /// Só permitido em sets Draft ou Published.
+        /// </summary>
+        [HttpPut("{accessToken}/photocards/{photocardId:guid}")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(typeof(PhotocardDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdatePhotocard(
+            [FromRoute] string accessToken,
+            [FromRoute] Guid photocardId,
+            [FromBody] UpdatePhotocardDto dto,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            var result = await _setService.UpdatePhotocardAsync(accessToken, photocardId, dto, gonId, ct);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Remove um photocard do set.
+        /// Só permitido em sets Draft ou Published.
+        /// </summary>
+        [HttpDelete("{accessToken}/photocards/{photocardId:guid}")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RemovePhotocard(
+            [FromRoute] string accessToken,
+            [FromRoute] Guid photocardId,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            await _setService.RemovePhotocardAsync(accessToken, photocardId, gonId, ct);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Salva a nova ordem dos photocards após drag-and-drop.
+        /// Recebe a lista de IDs na ordem desejada.
+        /// Só permitido em sets Draft ou Published.
+        /// </summary>
+        [HttpPut("{accessToken}/photocards/reorder")]
+        [Authorize(Roles = "Gon,Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ReorderPhotocards(
+            [FromRoute] string accessToken,
+            [FromBody] ReorderPhotocardsDto dto,
+            CancellationToken ct)
+        {
+            var gonId = User.GetUserId();
+            await _setService.ReorderPhotocardsAsync(accessToken, dto, gonId, ct);
+            return NoContent();
+        }
+
         // ── Endpoints de ciclo de vida do set (GON) ───────────────────────────────
 
         /// <summary>

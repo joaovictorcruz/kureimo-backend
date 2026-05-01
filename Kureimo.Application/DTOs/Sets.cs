@@ -66,6 +66,7 @@ namespace Kureimo.Application.DTOs
         Guid Id,
         string ArtistName,
         string Version,
+        int Order,
         int TotalClaims
     );
 
@@ -73,7 +74,17 @@ namespace Kureimo.Application.DTOs
         Guid Id,
         string ArtistName,
         string Version,
+        int Order,
         IEnumerable<ClaimDto> Claims
+    );
+
+    public record UpdatePhotocardDto(
+    string ArtistName,
+    string Version
+);
+
+    public record ReorderPhotocardsDto(
+        IEnumerable<Guid> OrderedIds  
     );
 
     public record GonInfoDto(

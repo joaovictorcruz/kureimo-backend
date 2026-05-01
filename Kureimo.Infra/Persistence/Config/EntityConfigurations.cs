@@ -144,6 +144,10 @@ namespace Kureimo.Infra.Persistence.Config
             builder.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate()
                 .IsRowVersion();
 
+            builder.Property(p => p.Order)
+                .IsRequired()
+                .HasDefaultValue(0);
+
             // Um photocard tem muitos claims
             builder.HasMany(p => p.Claims)
                 .WithOne()

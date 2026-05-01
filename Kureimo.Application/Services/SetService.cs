@@ -124,6 +124,62 @@ namespace Kureimo.Application.Services
             return MapToPhotocardDto(photocard);
         }
 
+        public async Task<PhotocardDto> UpdatePhotocardAsync(string accessToken, Guid photocardId, UpdatePhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            var photocard = set.Photocards.FirstOrDefault(p => p.Id == photocardId)
+                ?? throw new PhotocardNotFoundException(photocardId);
+
+            photocard.Update(dto.ArtistName, dto.Version);
+
+            _photocardRepository.Update(photocard);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Photocard atualizado: {PhotocardId}", photocardId);
+
+            return MapToPhotocardDto(photocard);
+        }
+
+        public async Task RemovePhotocardAsync(string accessToken, Guid photocardId, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            var photocard = set.Photocards.FirstOrDefault(p => p.Id == photocardId)
+                ?? throw new PhotocardNotFoundException(photocardId);
+
+            set.RemovePhotocard(photocardId);
+
+            _photocardRepository.Remove(photocard);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Photocard removido: {PhotocardId} do Set {SetId}", photocardId, set.Id);
+        }
+
+        public async Task ReorderPhotocardsAsync(string accessToken, ReorderPhotocardsDto dto, Guid requestingUserId, CancellationToken ct = default)
+        {
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+                ?? throw new SetNotFoundException(accessToken);
+
+            EnsureIsOwner(set, requestingUserId);
+
+            set.ReorderPhotocards(dto.OrderedIds);
+
+            // Persiste a nova ordem de cada photocard
+            foreach (var photocard in set.Photocards)
+                _photocardRepository.Update(photocard);
+
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Photocards reordenados no Set {SetId}", set.Id);
+        }
+
         public async Task PublishAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
@@ -311,12 +367,13 @@ namespace Kureimo.Application.Services
                 set.Photocards.Select(MapToPhotocardDetailDto));
 
         private static PhotocardDto MapToPhotocardDto(Photocard pc) =>
-            new(pc.Id, pc.ArtistName, pc.Version, pc.TotalClaims);
+            new(pc.Id, pc.ArtistName, pc.Version, pc.Order, pc.TotalClaims);
 
         private static PhotocardDetailDto MapToPhotocardDetailDto(Photocard pc) =>
             new(pc.Id,
                 pc.ArtistName,
                 pc.Version,
+                pc.Order,
                 pc.Claims.Select(c => new ClaimDto(
                     c.Id,
                     c.PhotocardId,

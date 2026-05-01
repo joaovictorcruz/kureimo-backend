@@ -61,11 +61,43 @@ namespace Kureimo.Domain.Entities
             if (Status == SetStatus.Closed)
                 throw new DomainException("Não é possível adicionar photocards a um set encerrado.");
 
-            var photocard = new Photocard(Id, artistName, version);
+            var order = _photocards.Count + 1;
+            var photocard = new Photocard(Id, artistName, version, order);
             _photocards.Add(photocard);
             SetUpdatedAt();
 
             return photocard;
+        }
+
+        public void RemovePhotocard(Guid photocardId)
+        {
+            if (Status == SetStatus.Open || Status == SetStatus.Closed)
+                throw new DomainException("Não é possível remover photocards de um set aberto ou encerrado.");
+
+            var photocard = _photocards.FirstOrDefault(p => p.Id == photocardId)
+                ?? throw new PhotocardNotFoundException(photocardId);
+
+            _photocards.Remove(photocard);
+            SetUpdatedAt();
+        }
+
+        public void ReorderPhotocards(IEnumerable<Guid> orderedIds)
+        {
+            if (Status == SetStatus.Open || Status == SetStatus.Closed)
+                throw new DomainException("Não é possível reordenar photocards de um set aberto ou encerrado.");
+
+            var ids = orderedIds.ToList();
+
+            if (ids.Count != _photocards.Count || !ids.All(id => _photocards.Any(p => p.Id == id)))
+                throw new DomainException("A lista de IDs não corresponde aos photocards do set.");
+
+            for (var i = 0; i < ids.Count; i++)
+            {
+                var photocard = _photocards.First(p => p.Id == ids[i]);
+                photocard.UpdateOrder(i + 1);
+            }
+
+            SetUpdatedAt();
         }
 
         public void UpdateImageUrl(string imageUrl)

@@ -52,18 +52,32 @@ namespace Kureimo.Application.Services
 
             if (dto.Username is not null)
             {
-                if (await _userRepository.UsernameExistsAsync(dto.Username, ct))
+                if (!string.Equals(dto.Username.Trim().ToLower(), user.Username, StringComparison.Ordinal)
+                    && await _userRepository.UsernameExistsAsync(dto.Username, ct))
                     throw new UsernameAlreadyInUseException();
+
 
                 user.UpdateUsername(dto.Username);
             }
 
             if (dto.Email is not null)
             {
-                if (await _userRepository.EmailExistsAsync(dto.Email, ct))
+                if (!string.Equals(dto.Email.Trim().ToLower(), user.Email, StringComparison.Ordinal)
+                    && await _userRepository.EmailExistsAsync(dto.Email, ct))
                     throw new EmailAlreadyInUseException();
 
+
                 user.UpdateEmail(dto.Email);
+            }
+
+            if (dto.PhoneNumber is not null)
+            {
+                if (!string.Equals(dto.PhoneNumber.Trim().ToLower(), user.PhoneNumber, StringComparison.Ordinal)
+                    && await _userRepository.EmailExistsAsync(dto.PhoneNumber, ct))
+                    throw new EmailAlreadyInUseException();
+
+
+                user.UpdatePhoneNumber(dto.PhoneNumber);
             }
 
             _userRepository.Update(user);

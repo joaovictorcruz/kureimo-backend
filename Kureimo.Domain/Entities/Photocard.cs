@@ -14,6 +14,7 @@ namespace Kureimo.Domain.Entities
         public string ArtistName { get; private set; }
 
         public string Version { get; private set; }
+        public int Order { get; private set; }
 
         private readonly List<Claim> _claims = new();
         public IReadOnlyCollection<Claim> Claims => _claims.AsReadOnly();
@@ -27,7 +28,7 @@ namespace Kureimo.Domain.Entities
         // EF Core constructor
         private Photocard() { }
 
-        internal Photocard(Guid setId, string artistName, string version)
+        internal Photocard(Guid setId, string artistName, string version, int order)
         {
             ValidateArtistName(artistName);
             ValidateVersion(version);
@@ -35,6 +36,7 @@ namespace Kureimo.Domain.Entities
             SetId = setId;
             ArtistName = artistName.Trim();
             Version = version.Trim();
+            Order = order;
         }
 
         /// <summary>
@@ -54,6 +56,25 @@ namespace Kureimo.Domain.Entities
         public bool HasBeenClaimedBy(Guid userId)
         {
             return _claims.Any(c => c.UserId == userId);
+        }
+
+        public void Update(string artistName, string version)
+        {
+            ValidateArtistName(artistName);
+            ValidateVersion(version);
+
+            ArtistName = artistName.Trim();
+            Version = version.Trim();
+            SetUpdatedAt();
+        }
+
+        public void UpdateOrder(int order)
+        {
+            if (order < 0)
+                throw new DomainException("A ordem do photocard não pode ser negativa.");
+
+            Order = order;
+            SetUpdatedAt();
         }
 
         public int TotalClaims => _claims.Count;

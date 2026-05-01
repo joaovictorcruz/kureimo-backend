@@ -2,6 +2,7 @@
 using Kureimo.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Kureimo.API.Controllers
 {
@@ -22,6 +23,7 @@ namespace Kureimo.API.Controllers
         /// <response code="201">Usuário criado com token JWT.</response>
         /// <response code="409">Email ou username já em uso.</response>
         [HttpPost("register")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Register(
@@ -38,6 +40,7 @@ namespace Kureimo.API.Controllers
         /// <response code="200">Login realizado com sucesso.</response>
         /// <response code="401">Credenciais inválidas.</response>
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(
