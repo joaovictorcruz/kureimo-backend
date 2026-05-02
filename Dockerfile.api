@@ -1,0 +1,26 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["Kureimo.API/Kureimo.API.csproj", "Kureimo.API/"]
+COPY ["Kureimo.Application/Kureimo.Application.csproj", "Kureimo.Application/"]
+COPY ["Kureimo.Domain/Kureimo.Domain.csproj", "Kureimo.Domain/"]
+COPY ["Kureimo.Infra/Kureimo.Infra.csproj", "Kureimo.Infra/"]
+
+RUN dotnet restore "Kureimo.API/Kureimo.API.csproj"
+
+COPY . .
+
+WORKDIR "/src/Kureimo.API"
+RUN dotnet build "Kureimo.API.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Kureimo.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Kureimo.API.dll"]

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: kureimo_postgres
+    environment:
+      POSTGRES_DB: KureimoDb
+      POSTGRES_USER: kureimo
+      POSTGRES_PASSWORD: kureimo123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kureimo -d KureimoDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: kureimo_api
+    ports:
+      - "5177:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=KureimoDb;Username=kureimo;Password=kureimo123"
+      JwtSettings__Secret: "seu-secret-de-desenvolvimento"
+      JwtSettings__Issuer: "kureimo-api"
+      JwtSettings__Audience: "kureimo-client"
+      JwtSettings__ExpirationMinutes: "480"
+      Cloudinary__CloudName: "seu-cloud-name"
+      Cloudinary__ApiKey: "sua-api-key"
+      Cloudinary__ApiSecret: "sua-api-secret"
+      InternalApi__ApiKey: "internal-dev-key"
+      InternalApi__BaseUrl: "http://api:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: kureimo_worker
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=KureimoDb;Username=kureimo;Password=kureimo123"
+      InternalApi__ApiKey: "internal-dev-key"
+      InternalApi__BaseUrl: "http://api:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+volumes:
+  postgres_data:
