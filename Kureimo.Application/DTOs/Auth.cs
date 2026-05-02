@@ -20,7 +20,6 @@ namespace Kureimo.Application.DTOs
     );
 
     public record AuthResponseDto(
-        string Token,
         string Username,
         string Email,
         string Role,

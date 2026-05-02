@@ -99,6 +99,12 @@ namespace Kureimo.Application.Services
             if (!_passwordHasher.Verify(dto.CurrentPassword, user.PasswordHash))
                 throw new InvalidCredentialsException();
 
+            // Adiciona esse log temporário para confirmar que chegou aqui
+            _logger.LogInformation("Verificando se nova senha é igual à atual...");
+
+            if (_passwordHasher.Verify(dto.NewPassword, user.PasswordHash))
+                throw new DomainException("A nova senha não pode ser igual à senha atual.");
+
             var newHash = _passwordHasher.Hash(dto.NewPassword);
             user.UpdatePasswordHash(newHash);
 

@@ -1,5 +1,8 @@
-﻿using Kureimo.Application.DTOs;
+﻿using Kureimo.API.Extensions;
+using Kureimo.Application.DTOs;
 using Kureimo.Application.Services;
+using Kureimo.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,10 +14,13 @@ namespace Kureimo.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly IWebHostEnvironment _env;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, IWebHostEnvironment env)
         {
             _authService = authService;
+            _env = env;
+
         }
 
         /// <summary>
@@ -31,6 +37,8 @@ namespace Kureimo.API.Controllers
             CancellationToken ct)
         {
             var result = await _authService.RegisterAsync(dto, ct);
+            SetAuthCookie(result.token);
+
             return StatusCode(StatusCodes.Status201Created, result);
         }
 
@@ -47,8 +55,40 @@ namespace Kureimo.API.Controllers
             [FromBody] LoginRequestDto dto,
             CancellationToken ct)
         {
-            var result = await _authService.LoginAsync(dto, ct);
+            var (result, token) = await _authService.LoginAsync(dto, ct);
+            SetAuthCookie(token);
+
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Retorna os dados do usuário autenticado via cookie.
+        /// Usado pelo frontend ao carregar a página para restaurar a sessão.
+        /// </summary>
+        /// <response code="200">Dados do usuário autenticado.</response>
+        /// <response code="401">Cookie ausente ou expirado.</response>
+        [HttpGet("me")]
+        [Authorize]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Me(CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+            var result = await _authService.GetMeAsync(userId, ct);
+            return Ok(result);
+        }
+
+        private void SetAuthCookie(string token)
+        {
+            var isProd = _env.IsProduction();
+
+            Response.Cookies.Append("kureimo_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isProd,                                          // false em dev local
+                SameSite = isProd ? SameSiteMode.None : SameSiteMode.Lax,// Lax funciona em dev
+                Expires = DateTimeOffset.UtcNow.AddMinutes(480)
+            });
         }
     }
 }

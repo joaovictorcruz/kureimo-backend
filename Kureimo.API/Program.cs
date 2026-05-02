@@ -90,6 +90,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+
 // ── Infraestrutura (DB, JWT, Repositórios, SignalR, Services) ─────────────────
 // Tudo registrado em Kureimo.Infra/DependencyInjection.cs
 builder.Services.AddInfrastructure(builder.Configuration);

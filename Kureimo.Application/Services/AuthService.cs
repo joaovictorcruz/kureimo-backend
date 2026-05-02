@@ -37,7 +37,7 @@ namespace Kureimo.Application.Services
             _logger = logger;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto, CancellationToken ct = default)
+        public async Task<(AuthResponseDto dto, string token)> RegisterAsync(RegisterRequestDto dto, CancellationToken ct = default)
         {
             // Verifica unicidade antes de criar a entidade
             // (regra de unicidade é de infra, não do domínio puro)
@@ -58,10 +58,10 @@ namespace Kureimo.Application.Services
 
             var token = _jwtService.GenerateToken(user);
 
-            return MapToAuthResponse(user, token);
+            return (MapToAuthResponse(user), token);
         }
 
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto, CancellationToken ct = default)
+        public async Task<(AuthResponseDto dto, string token)> LoginAsync(LoginRequestDto dto, CancellationToken ct = default)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
 
@@ -75,10 +75,18 @@ namespace Kureimo.Application.Services
 
             var token = _jwtService.GenerateToken(user);
 
-            return MapToAuthResponse(user, token);
+            return (MapToAuthResponse(user), token);
         }
 
-        private static AuthResponseDto MapToAuthResponse(User user, string token) =>
-            new(token, user.Username, user.Email, user.Role.ToString(), user.PhoneNumber, user.ProfilePicUrl);
+        public async Task<AuthResponseDto> GetMeAsync(Guid userId, CancellationToken ct = default)
+        {
+            var user = await _userRepository.GetByIdAsync(userId, ct)
+                ?? throw new UserNotFoundException();
+
+            return MapToAuthResponse(user);
+        }
+
+        private static AuthResponseDto MapToAuthResponse(User user) =>
+            new(user.Username, user.Email, user.Role.ToString(), user.PhoneNumber, user.ProfilePicUrl);
     }
 }

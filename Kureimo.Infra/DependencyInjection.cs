@@ -116,9 +116,13 @@ namespace Kureimo.Infra
                 {
                     OnMessageReceived = context =>
                     {
+                        // Lê o token do cookie httpOnly
+                        if (context.Request.Cookies.TryGetValue("kureimo_token", out var cookieToken))
+                            context.Token = cookieToken;
+
+                        // Mantém suporte ao query string para o SignalR
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
-
                         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                             context.Token = accessToken;
 
