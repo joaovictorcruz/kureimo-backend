@@ -130,5 +130,20 @@ namespace Kureimo.Domain.Entities
             if (digits.Length < 10 || digits.Length > 13)
                 throw new DomainException("Número de telefone inválido.");
         }
+
+        public static void ValidatePasswordStrength(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                throw new DomainException("A senha não pode ser vazia.");
+
+            if (password.Length < 8)
+                throw new DomainException("A senha deve ter pelo menos 8 caracteres.");
+
+            if (!password.Any(char.IsUpper))
+                throw new DomainException("A senha deve conter pelo menos uma letra maiúscula.");
+
+            if (!password.Any(char.IsDigit))
+                throw new DomainException("A senha deve conter pelo menos um número.");
+        }
     }
 }

@@ -47,6 +47,8 @@ namespace Kureimo.Application.Services
             if (await _userRepository.UsernameExistsAsync(dto.Username, ct))
                 throw new UsernameAlreadyInUseException();
 
+            User.ValidatePasswordStrength(dto.Password);
+
             var passwordHash = _passwordHasher.Hash(dto.Password);
             var role = dto.IsGon ? UserRole.Gon : UserRole.Collector;
             var user = new User(dto.Username, dto.Email, passwordHash, dto.PhoneNumber, role);

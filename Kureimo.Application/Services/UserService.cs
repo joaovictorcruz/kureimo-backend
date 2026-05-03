@@ -1,5 +1,6 @@
 ﻿using Kureimo.Application.DTOs;
 using Kureimo.Application.Interfaces;
+using Kureimo.Domain.Entities;
 using Kureimo.Domain.Exceptions;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
@@ -104,6 +105,8 @@ namespace Kureimo.Application.Services
 
             if (_passwordHasher.Verify(dto.NewPassword, user.PasswordHash))
                 throw new DomainException("A nova senha não pode ser igual à senha atual.");
+
+            User.ValidatePasswordStrength(dto.NewPassword);
 
             var newHash = _passwordHasher.Hash(dto.NewPassword);
             user.UpdatePasswordHash(newHash);

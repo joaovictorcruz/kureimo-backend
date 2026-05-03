@@ -274,10 +274,27 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("O estilo de fonte não pode ser vazio.");
 
             var allowed = new[]
-            {
-            "Inter", "Roboto", "Poppins", "Montserrat", "Lato",
-            "Nunito", "Raleway", "Playfair Display", "DM Sans", "Space Grotesk"
-            };
+                {
+                    "Nunito",
+                    "Montserrat",
+                    "Raleway",
+                    "Poppins",
+                    "Quicksand",
+                    "Josefin Sans",
+                    "Righteous",
+                    "DM Serif Display",
+                    "Playfair Display",
+                    "Lora",
+                    "Cinzel",
+                    "Cormorant Garamond",
+                    "Abril Fatface",
+                    "Pacifico",
+                    "Dancing Script",
+                    "Caveat",
+                    "Satisfy",
+                    "Courier New",
+                    "Space Mono"
+                };
 
             if (!allowed.Contains(fontStyle.Trim()))
                 throw new DomainException($"Fonte inválida. As opções disponíveis são: {string.Join(", ", allowed)}.");

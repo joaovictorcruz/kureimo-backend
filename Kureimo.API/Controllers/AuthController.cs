@@ -61,6 +61,23 @@ namespace Kureimo.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("logout")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public IActionResult Logout()
+        {
+            var isProd = _env.IsProduction();
+
+            Response.Cookies.Delete("kureimo_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isProd,
+                SameSite = isProd ? SameSiteMode.None : SameSiteMode.Lax
+            });
+
+            return NoContent();
+        }
+
         /// <summary>
         /// Retorna os dados do usuário autenticado via cookie.
         /// Usado pelo frontend ao carregar a página para restaurar a sessão.
