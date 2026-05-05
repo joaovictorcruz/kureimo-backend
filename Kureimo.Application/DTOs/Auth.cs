@@ -20,10 +20,20 @@ namespace Kureimo.Application.DTOs
     );
 
     public record AuthResponseDto(
+        Guid Id,
         string Username,
         string Email,
         string Role,
         string? PhoneNumber,    
         string? ProfilePicUrl  
+    );
+
+    public record ForgotPasswordDto(
+        string Email
+    );
+
+    public record ResetPasswordDto(
+        string Token, 
+        string NewPassword
     );
 }

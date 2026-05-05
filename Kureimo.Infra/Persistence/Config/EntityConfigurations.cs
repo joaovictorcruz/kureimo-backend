@@ -189,4 +189,27 @@ namespace Kureimo.Infra.Persistence.Config
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
+
+    public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
+    {
+        public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
+        {
+            builder.HasKey(t => t.Id);
+
+            builder.Property(t => t.Token)
+                .IsRequired()
+                .HasMaxLength(64);
+
+            builder.Property(t => t.ExpiresAt).IsRequired();
+            builder.Property(t => t.UsedAt);
+            builder.Property(t => t.CreatedAt).IsRequired();
+
+            builder.HasIndex(t => t.Token).IsUnique();
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
 }

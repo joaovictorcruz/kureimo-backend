@@ -61,6 +61,23 @@ namespace Kureimo.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Retorna os dados do usuário autenticado via cookie.
+        /// Usado pelo frontend ao carregar a página para restaurar a sessão.
+        /// </summary>
+        /// <response code="200">Dados do usuário autenticado.</response>
+        /// <response code="401">Cookie ausente ou expirado.</response>
+        [HttpGet("me")]
+        [Authorize]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Me(CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+            var result = await _authService.GetMeAsync(userId, ct);
+            return Ok(result);
+        }
+
         [HttpPost("logout")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -79,20 +96,31 @@ namespace Kureimo.API.Controllers
         }
 
         /// <summary>
-        /// Retorna os dados do usuário autenticado via cookie.
-        /// Usado pelo frontend ao carregar a página para restaurar a sessão.
+        /// Solicita o reset de senha — envia email com token.
+        /// Sempre retorna 200 mesmo se o email não existir.
         /// </summary>
-        /// <response code="200">Dados do usuário autenticado.</response>
-        /// <response code="401">Cookie ausente ou expirado.</response>
-        [HttpGet("me")]
-        [Authorize]
-        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Me(CancellationToken ct)
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordDto dto,
+            CancellationToken ct)
         {
-            var userId = User.GetUserId();
-            var result = await _authService.GetMeAsync(userId, ct);
-            return Ok(result);
+            await _authService.ForgotPasswordAsync(dto, ct);
+            return Ok(new { message = "Se o email existir, você receberá as instruções em breve." });
+        }
+
+        /// <summary>
+        /// Redefine a senha usando o token recebido por email.
+        /// </summary>
+        [HttpPost("reset-password")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] ResetPasswordDto dto,
+            CancellationToken ct)
+        {
+            await _authService.ResetPasswordAsync(dto, ct);
+            return NoContent();
         }
 
         private void SetAuthCookie(string token)

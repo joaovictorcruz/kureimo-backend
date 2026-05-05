@@ -2,6 +2,7 @@
 using Kureimo.Application.Services;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
+using Kureimo.Infra.Email;
 using Kureimo.Infra.Persistence;
 using Kureimo.Infra.Persistence.Repositories;
 using Kureimo.Infra.Realtime;
@@ -12,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +33,7 @@ namespace Kureimo.Infra
                 .AddRepositories()
                 .AddSecurity(configuration)
                 .AddRealTime()
+                .AddEmail(configuration)
                 .AddApplicationServices();
 
             return services;
@@ -67,6 +70,7 @@ namespace Kureimo.Infra
             services.AddScoped<ISetRepository, SetRepository>();
             services.AddScoped<IPhotocardRepository, PhotocardRepository>();
             services.AddScoped<IClaimRepository, ClaimRepository>();
+            services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 
             return services;
         }
@@ -153,9 +157,24 @@ namespace Kureimo.Infra
             services.AddScoped<SetService>();
             services.AddScoped<ClaimService>();
             services.AddScoped<IStorageService, CloudinaryService>();
+            services.AddScoped<IEmailService, ResendEmailService>();
 
             return services;
         }
+
+        private static IServiceCollection AddEmail(this IServiceCollection services,IConfiguration configuration)
+        {
+            services.AddOptions();
+            services.AddHttpClient<ResendClient>();
+            services.Configure<ResendClientOptions>(o =>
+            {
+                o.ApiToken = configuration["Resend:ApiKey"]!;
+            });
+            services.AddTransient<IResend, ResendClient>();
+
+            return services;
+        }
+
 
         public static IServiceCollection AddInfrastructureForWorker(this IServiceCollection services, IConfiguration configuration)
         {

@@ -165,4 +165,24 @@ namespace Kureimo.Infra.Persistence.Repositories
         public async Task AddAsync(Claim claim, CancellationToken ct = default)
             => await _context.Claims.AddAsync(claim, ct);
     }
+
+    public class PasswordResetTokenRepository : IPasswordResetTokenRepository
+    {
+        private readonly AppDbContext _context;
+
+        public PasswordResetTokenRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<PasswordResetToken?> GetByTokenAsync(string token, CancellationToken ct = default)
+            => await _context.PasswordResetTokens
+                .FirstOrDefaultAsync(t => t.Token == token, ct);
+
+        public async Task AddAsync(PasswordResetToken resetToken, CancellationToken ct = default)
+            => await _context.PasswordResetTokens.AddAsync(resetToken, ct);
+
+        public void Update(PasswordResetToken resetToken)
+            => _context.PasswordResetTokens.Update(resetToken);
+    }
 }

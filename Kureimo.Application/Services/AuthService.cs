@@ -21,6 +21,8 @@ namespace Kureimo.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtService _jwtService;
+        private readonly IPasswordResetTokenRepository _passwordResetTokenRepository;
+        private readonly IEmailService _emailService;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
@@ -28,12 +30,16 @@ namespace Kureimo.Application.Services
             IUnitOfWork unitOfWork,
             IPasswordHasher passwordHasher,
             IJwtService jwtService,
+            IPasswordResetTokenRepository passwordResetTokenRepository,
+            IEmailService emailService,
             ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             _jwtService = jwtService;
+            _passwordResetTokenRepository = passwordResetTokenRepository;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -88,7 +94,54 @@ namespace Kureimo.Application.Services
             return MapToAuthResponse(user);
         }
 
+        public async Task ForgotPasswordAsync(ForgotPasswordDto dto, CancellationToken ct = default)
+        {
+            // Sempre retorna sem erro mesmo se email não existir — evita enumeração de usuários
+            var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
+            if (user is null) return;
+
+            var resetToken = new PasswordResetToken(user.Id);
+            await _passwordResetTokenRepository.AddAsync(resetToken, ct);
+            await _unitOfWork.CommitAsync(ct);
+
+            await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                user.Username,
+                resetToken.Token,
+                ct);
+
+            _logger.LogInformation("Token de reset enviado para: {Email}", user.Email);
+        }
+
+        public async Task ResetPasswordAsync(ResetPasswordDto dto, CancellationToken ct = default)
+        {
+            var resetToken = await _passwordResetTokenRepository.GetByTokenAsync(dto.Token, ct)
+                ?? throw new DomainException("Token inválido.");
+
+            if (!resetToken.IsValid)
+                throw new DomainException("Token expirado ou já utilizado.");
+
+            var user = await _userRepository.GetByIdAsync(resetToken.UserId, ct)
+                ?? throw new UserNotFoundException();
+
+            User.ValidatePasswordStrength(dto.NewPassword);
+
+            if (_passwordHasher.Verify(dto.NewPassword, user.PasswordHash))
+                throw new DomainException("A nova senha não pode ser igual à senha atual.");
+
+            var newHash = _passwordHasher.Hash(dto.NewPassword);
+            user.UpdatePasswordHash(newHash);
+
+            resetToken.MarkAsUsed();
+
+            _userRepository.Update(user);
+            _passwordResetTokenRepository.Update(resetToken);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Senha redefinida para usuário: {UserId}", user.Id);
+        }
+
         private static AuthResponseDto MapToAuthResponse(User user) =>
-            new(user.Username, user.Email, user.Role.ToString(), user.PhoneNumber, user.ProfilePicUrl);
+            new(user.Id, user.Username, user.Email, user.Role.ToString(), user.PhoneNumber, user.ProfilePicUrl);
     }
 }
