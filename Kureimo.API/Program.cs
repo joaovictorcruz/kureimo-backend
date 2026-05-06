@@ -81,6 +81,7 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
+                "https://kureimo-production.up.railway.app",
                 "https://kureimohml.vercel.app", // Dominio homolog
                 "http://localhost:5173"  // Vite dev server padrão
             )
