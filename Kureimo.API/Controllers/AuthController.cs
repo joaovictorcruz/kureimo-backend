@@ -96,6 +96,25 @@ namespace Kureimo.API.Controllers
         }
 
         /// <summary>
+        /// Retorna o token JWT para autenticação do SignalR.
+        /// Necessário porque WebSocket não suporta httpOnly cookies.
+        /// O backend lê o cookie e retorna no body para o frontend usar no accessTokenFactory.
+        /// </summary>
+        [HttpGet("signalr-token")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult GetSignalRToken()
+        {
+            var token = Request.Cookies["kureimo_token"];
+
+            if (string.IsNullOrEmpty(token))
+                return Unauthorized();
+
+            return Ok(new { token });
+        }
+
+        /// <summary>
         /// Solicita o reset de senha — envia email com token.
         /// Sempre retorna 200 mesmo se o email não existir.
         /// </summary>
