@@ -150,7 +150,7 @@ namespace Kureimo.API.Controllers
             {
                 HttpOnly = true,
                 Secure = isProd,                                          // false em dev local
-                SameSite = isProd ? SameSiteMode.None : SameSiteMode.Lax,// Lax funciona em dev
+                SameSite = SameSiteMode.Lax,// Lax funciona em dev
                 Expires = DateTimeOffset.UtcNow.AddMinutes(480)
             });
         }
