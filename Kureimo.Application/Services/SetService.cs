@@ -112,7 +112,7 @@ namespace Kureimo.Application.Services
 
             EnsureIsOwner(set, requestingUserId);
 
-            var photocard = set.AddPhotocard(dto.ArtistName, dto.Version);
+            var photocard = set.AddPhotocard(dto.ArtistName, dto?.Version);
 
             await _photocardRepository.AddAsync(photocard, ct);
             await _unitOfWork.CommitAsync(ct);

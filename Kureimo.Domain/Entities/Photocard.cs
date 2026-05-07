@@ -13,7 +13,7 @@ namespace Kureimo.Domain.Entities
         public Guid SetId { get; private set; }
         public string ArtistName { get; private set; }
 
-        public string Version { get; private set; }
+        public string? Version { get; private set; }
         public int Order { get; private set; }
 
         private readonly List<Claim> _claims = new();
@@ -31,11 +31,13 @@ namespace Kureimo.Domain.Entities
         internal Photocard(Guid setId, string artistName, string version, int order)
         {
             ValidateArtistName(artistName);
-            ValidateVersion(version);
+
+            if (version is not null)
+                ValidateVersion(version);
 
             SetId = setId;
             ArtistName = artistName.Trim();
-            Version = version.Trim();
+            Version = version?.Trim();
             Order = order;
         }
 
@@ -61,10 +63,12 @@ namespace Kureimo.Domain.Entities
         public void Update(string artistName, string version)
         {
             ValidateArtistName(artistName);
-            ValidateVersion(version);
+
+            if (version is not null)
+                ValidateVersion(version);
 
             ArtistName = artistName.Trim();
-            Version = version.Trim();
+            Version = version?.Trim();
             SetUpdatedAt();
         }
 
@@ -90,8 +94,6 @@ namespace Kureimo.Domain.Entities
 
         private static void ValidateVersion(string version)
         {
-            if (string.IsNullOrWhiteSpace(version))
-                throw new DomainException("A versão do photocard não pode ser vazia.");
 
             if (version.Trim().Length > 100)
                 throw new DomainException("A versão deve ter no máximo 100 caracteres.");

@@ -27,7 +27,7 @@ namespace Kureimo.Application.DTOs
 
     public record AddPhotocardDto(
         string ArtistName,
-        string Version
+        string? Version
     );
 
     // Resposta resumida — usada na listagem dos sets do GON
@@ -65,7 +65,7 @@ namespace Kureimo.Application.DTOs
     public record PhotocardDto(
         Guid Id,
         string ArtistName,
-        string Version,
+        string? Version,
         int Order,
         int TotalClaims
     );
@@ -73,14 +73,14 @@ namespace Kureimo.Application.DTOs
     public record PhotocardDetailDto(
         Guid Id,
         string ArtistName,
-        string Version,
+        string? Version,
         int Order,
         IEnumerable<ClaimDto> Claims
     );
 
     public record UpdatePhotocardDto(
     string ArtistName,
-    string Version
+    string? Version
 );
 
     public record ReorderPhotocardsDto(
