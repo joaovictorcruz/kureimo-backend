@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-Kureimo.Worker-3e7c49c3-75ee-4d98-93b5-9b3cf32987fd</UserSecretsId>
+
+	<VersionPrefix>1.0.0</VersionPrefix>
   </PropertyGroup>
 
   <ItemGroup>
