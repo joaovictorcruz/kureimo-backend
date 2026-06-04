@@ -22,6 +22,7 @@ namespace Kureimo.Domain.Repositories
         /// Usado na página do set onde precisamos exibir tudo em tempo real.
         /// </summary>
         Task<Set?> GetByAccessTokenWithDetailsAsync(string accessToken, CancellationToken ct = default);
+        Task<Set?> GetByAccessTokenWithPhotocardIdsAsync(string accessToken, CancellationToken ct = default);
 
         Task<(IEnumerable<Set> Items, int TotalCount)> GetByGonIdAsync(Guid gonId, int page, int pageSize, CancellationToken ct = default);
 
