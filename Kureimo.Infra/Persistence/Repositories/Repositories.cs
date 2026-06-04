@@ -164,6 +164,9 @@ namespace Kureimo.Infra.Persistence.Repositories
 
         public async Task AddAsync(Claim claim, CancellationToken ct = default)
             => await _context.Claims.AddAsync(claim, ct);
+
+        public void Remove(Claim claim)
+            => _context.Claims.Remove(claim);
     }
 
     public class PasswordResetTokenRepository : IPasswordResetTokenRepository

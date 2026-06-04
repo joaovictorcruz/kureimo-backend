@@ -19,6 +19,14 @@ namespace Kureimo.Domain.Entities
         /// Posição 1 = primeiro a dar claim.
         public int QueuePosition { get; private set; }
 
+        private static readonly TimeSpan UnclaimWindow = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Retorna true se o claim ainda está dentro da janela de arrependimento (5 min).
+        /// </summary>
+        public bool CanUnclaim(DateTimeOffset now) =>
+            now - ClaimedAt <= UnclaimWindow;
+
         // EF Core constructor
         private Claim() { }
 

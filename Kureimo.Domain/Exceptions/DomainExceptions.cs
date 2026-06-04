@@ -18,6 +18,12 @@ namespace Kureimo.Domain.Exceptions
             : base("A janela de claim para este set foi encerrada.") { }
     }
 
+    public class ClaimRemovalWindowExpiredException : DomainException
+    {
+        public ClaimRemovalWindowExpiredException()
+            : base("O prazo de 5 minutos para remover o claim já expirou. O compromisso está confirmado.") { }
+    }
+
     public class UserAlreadyClaimedException : DomainException
     {
         public UserAlreadyClaimedException()

@@ -48,5 +48,16 @@ namespace Kureimo.Infra.Realtime
                 .Group(SetHub.GetGroupName(setAccessToken))
                 .SendAsync("SetStatusChanged", newStatus, ct);
         }
+
+        public async Task NotifyClaimRemovedAsync(
+            string setAccessToken,
+            Guid photocardId,
+            Guid userId,
+            CancellationToken ct = default)
+        {
+            await _hubContext.Clients
+                .Group(SetHub.GetGroupName(setAccessToken))
+                .SendAsync("ClaimRemoved", new { photocardId, userId }, ct);
+        }
     }
 }

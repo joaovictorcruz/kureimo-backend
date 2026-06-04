@@ -31,7 +31,7 @@ namespace Kureimo.Domain.Entities
         private readonly List<Photocard> _photocards = new();
         public DateTimeOffset? DeletedAt { get; private set; }
         public IReadOnlyCollection<Photocard> Photocards => _photocards.AsReadOnly();
-        private const int MinutesBeforeClaim = 5;
+        private const int MinutesBeforeClaim = 4;
         public DateTimeOffset? CancelledAt { get; private set; }
         public string BackgroundColor { get; private set; } = "#FFFFFF";
         public string FontColor { get; private set; } = "#000000";
@@ -164,7 +164,7 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("Não é possível alterar o horário de um set já aberto ou encerrado.");
 
             if ((claimOpensAt - DateTimeOffset.UtcNow).TotalMinutes < MinutesBeforeClaim)
-                throw new DomainException($"O horário de claim deve ser pelo menos {MinutesBeforeClaim} minutos no futuro.");
+                throw new DomainException($"O horário de abertura para claim deve ser pelo menos 5 minutos no futuro.");
 
             ValidateClaimOpensAt(claimOpensAt);
             ClaimOpensAt = claimOpensAt;
@@ -239,7 +239,7 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("O horário de abertura deve ser no futuro.");
 
             if ((claimOpensAt - DateTimeOffset.UtcNow).TotalMinutes <= MinutesBeforeClaim)
-                throw new DomainException($"O horário de claim deve ser pelo menos {MinutesBeforeClaim} minutos no futuro.");
+                throw new DomainException($"O horário de abertura para claim deve ser pelo menos 5 minutos no futuro.");
         }
 
         private static string GenerateAccessToken()

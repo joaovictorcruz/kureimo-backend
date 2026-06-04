@@ -18,5 +18,11 @@ namespace Kureimo.Domain.Interfaces
         /// Notifica que o status do set mudou (ex: aberto para claims).
         /// </summary>
         Task NotifySetStatusChangedAsync(string setAccessToken, string newStatus, CancellationToken ct = default);
+
+        /// <summary>
+        /// Notifica todos os clientes conectados ao grupo do set
+        /// que um claim foi removido dentro da janela de arrependimento.
+        /// </summary>
+        Task NotifyClaimRemovedAsync(string setAccessToken, Guid photocardId, Guid userId, CancellationToken ct = default);
     }
 }

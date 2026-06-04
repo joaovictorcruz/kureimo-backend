@@ -50,6 +50,30 @@ namespace Kureimo.API.Controllers
         }
 
         /// <summary>
+        /// Remove o claim do usuário autenticado em um photocard.
+        /// Só é possível dentro de 5 minutos após o claim ter sido registrado.
+        /// Após esse prazo, o claim é permanente e o compromisso está confirmado.
+        /// </summary>
+        /// <response code="204">Claim removido com sucesso.</response>
+        /// <response code="400">Janela de 5 minutos expirada ou claim inexistente.</response>
+        /// <response code="422">Set não está aberto para claims.</response>
+        [HttpDelete("{photocardId:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+        public async Task<IActionResult> RemoveClaim(
+            [FromRoute] Guid photocardId,
+            CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+
+            var serverTimestamp = (DateTimeOffset)HttpContext.Items[RequestTimestampMiddleware.Key]!;
+
+            await _claimService.RemoveClaimAsync(photocardId, userId, serverTimestamp, ct);
+            return NoContent();
+        }
+
+        /// <summary>
         /// Retorna a lista de claims de um photocard ordenada por posição na fila.
         /// Acessível por qualquer usuário autenticado — collector, GON ou admin.
         /// </summary>

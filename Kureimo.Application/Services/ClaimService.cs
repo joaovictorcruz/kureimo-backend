@@ -79,6 +79,44 @@ namespace Kureimo.Application.Services
             throw new DomainException("Não foi possível registrar o claim após múltiplas tentativas. Tente novamente.");
         }
 
+        /// <summary>
+        /// Remove o claim do usuário autenticado em um photocard.
+        /// Só é permitido dentro da janela de 5 minutos após o claim ter sido registrado.
+        /// Após esse prazo, o claim é permanente e o compromisso está confirmado.
+        /// </summary>
+        public async Task RemoveClaimAsync(
+            Guid photocardId,
+            Guid userId,
+            DateTimeOffset serverTimestamp,
+            CancellationToken ct = default)
+        {
+            var photocard = await _photocardRepository.GetByIdWithClaimsAsync(photocardId, ct)
+                ?? throw new PhotocardNotFoundException(photocardId);
+
+            var set = await _setRepository.GetByIdAsync(photocard.SetId, ct)
+                ?? throw new SetNotFoundException();
+
+            if (!set.IsClaimOpen())
+                throw new ClaimWindowNotOpenException();
+
+            // O domínio valida se o claim existe e se a janela de 3 min ainda está aberta
+            photocard.RemoveClaim(userId, serverTimestamp);
+
+            // Busca a entidade real no banco para deletar
+            var claim = await _claimRepository.GetByUserAndPhotocardAsync(userId, photocardId, ct)
+                ?? throw new DomainException("Claim não encontrado.");
+
+            _claimRepository.Remove(claim);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation(
+                "Claim removido — Photocard: {PhotocardId} | Usuário: {UserId} | Timestamp: {Timestamp}",
+                photocardId, userId, serverTimestamp);
+
+            // Fire-and-forget intencional: falha de notificação não afeta o unclaim
+            _ = NotifyClaimRemovedAsync(set.AccessToken, photocardId, userId);
+        }
+
         public async Task<IEnumerable<ClaimDto>> GetClaimsByPhotocardAsync(Guid photocardId, CancellationToken ct = default)
         {
             var claims = await _photocardRepository.GetByIdWithClaimsAsync(photocardId, ct);
@@ -95,9 +133,11 @@ namespace Kureimo.Application.Services
             {
                 var u = await _userRepository.GetByIdAsync(uid, ct);
                 if (u is not null)
+                {
                     usernames[uid] = u.Username;
                     phoneNumbers[uid] = u.PhoneNumber;
                     profilePics[uid] = u.ProfilePicUrl;
+                }
             }
 
             return claims.Claims
@@ -178,6 +218,18 @@ namespace Kureimo.Application.Services
             {
                 // Falha de notificação não é crítica — o claim já foi persistido
                 _logger.LogError(ex, "Falha ao notificar claim via SignalR para o set {AccessToken}", accessToken);
+            }
+        }
+
+        private async Task NotifyClaimRemovedAsync(string accessToken, Guid photocardId, Guid userId)
+        {
+            try
+            {
+                await _notificationService.NotifyClaimRemovedAsync(accessToken, photocardId, userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Falha ao notificar remoção de claim via SignalR para o set {AccessToken}", accessToken);
             }
         }
     }

@@ -131,7 +131,6 @@ namespace Kureimo.Infra.Persistence.Config
                 .HasMaxLength(100);
 
             builder.Property(p => p.Version)
-                .IsRequired()
                 .HasMaxLength(100);
 
             builder.Property(p => p.CreatedAt).IsRequired();

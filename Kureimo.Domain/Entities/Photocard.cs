@@ -12,7 +12,7 @@ namespace Kureimo.Domain.Entities
     {
         public Guid SetId { get; private set; }
         public string ArtistName { get; private set; }
-
+            
         public string? Version { get; private set; }
         public int Order { get; private set; }
 
@@ -28,7 +28,7 @@ namespace Kureimo.Domain.Entities
         // EF Core constructor
         private Photocard() { }
 
-        internal Photocard(Guid setId, string artistName, string version, int order)
+        internal Photocard(Guid setId, string artistName, string? version, int order)
         {
             ValidateArtistName(artistName);
 
@@ -54,6 +54,25 @@ namespace Kureimo.Domain.Entities
 
             return claim;
         }
+        /// <summary>
+        /// Remove o claim do usuário se ainda estiver dentro da janela de 5 minutos.
+        /// Lança exceção se o claim não existir ou a janela tiver expirado.
+        /// </summary>
+        public Claim RemoveClaim(Guid userId, DateTimeOffset now)
+        {
+            var claim = _claims.FirstOrDefault(c => c.UserId == userId)
+                ?? throw new DomainException("Você não possui um claim neste photocard.");
+
+            if (!claim.CanUnclaim(now))
+                throw new ClaimRemovalWindowExpiredException();
+
+            _claims.Remove(claim);
+            SetUpdatedAt();
+
+            return claim;
+        }
+
+
 
         public bool HasBeenClaimedBy(Guid userId)
         {
