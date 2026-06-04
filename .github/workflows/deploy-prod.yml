@@ -5,13 +5,63 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   docker:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Bump API Version
+        id: api_version
+        run: |
+          VERSION=$(grep -oP '(?<=<VersionPrefix>).*?(?=</VersionPrefix>)' Kureimo.API/Kureimo.API.csproj)
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          PATCH=$((PATCH + 1))
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          sed -i "s/<VersionPrefix>$VERSION<\/VersionPrefix>/<VersionPrefix>$NEW_VERSION<\/VersionPrefix>/" Kureimo.API/Kureimo.API.csproj
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Bump Worker Version
+        id: worker_version
+        run: |
+          VERSION=$(grep -oP '(?<=<VersionPrefix>).*?(?=</VersionPrefix>)' Kureimo.Worker/Kureimo.Worker.csproj)
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          PATCH=$((PATCH + 1))
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          sed -i "s/<VersionPrefix>$VERSION<\/VersionPrefix>/<VersionPrefix>$NEW_VERSION<\/VersionPrefix>/" Kureimo.Worker/Kureimo.Worker.csproj
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit Version Bump
+        run: |
+          git add Kureimo.API/Kureimo.API.csproj
+          git add Kureimo.Worker/Kureimo.Worker.csproj
+
+          git commit -m "chore: bump versions [skip ci]" || echo "No changes"
+
+          git push
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -29,6 +79,7 @@ jobs:
           file: ./Dockerfile.api
           push: true
           tags: |
+            joaovcrz/hmlkureimoapi:${{ steps.api_version.outputs.version }}
             joaovcrz/hmlkureimoapi:latest
 
       - name: Build and Push Worker
@@ -38,4 +89,5 @@ jobs:
           file: ./Dockerfile.worker
           push: true
           tags: |
+            joaovcrz/hmlkureimoworker:${{ steps.worker_version.outputs.version }}
             joaovcrz/hmlkureimoworker:latest
