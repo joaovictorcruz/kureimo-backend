@@ -91,3 +91,24 @@ jobs:
           tags: |
             joaovcrz/hmlkureimoworker:${{ steps.worker_version.outputs.version }}
             joaovcrz/hmlkureimoworker:latest
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Redeploy API
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway redeploy \
+            --service ee1f1a35-820c-4cba-87f9-e31e950c29a0 \
+            --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
+            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9
+
+      - name: Redeploy Worker
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway redeploy \
+            --service ff255d01-f11c-44e6-a42d-823dfa11c528 \
+            --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
+            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9
