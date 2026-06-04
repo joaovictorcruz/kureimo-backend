@@ -102,7 +102,8 @@ jobs:
           railway redeploy \
             --service ee1f1a35-820c-4cba-87f9-e31e950c29a0 \
             --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
-            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9
+            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9 \
+            --yes
 
       - name: Redeploy Worker
         env:
@@ -111,4 +112,5 @@ jobs:
           railway redeploy \
             --service ff255d01-f11c-44e6-a42d-823dfa11c528 \
             --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
-            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9
+            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9 \
+            --yes
