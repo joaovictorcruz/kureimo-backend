@@ -106,8 +106,7 @@ namespace Kureimo.Application.Services
 
         public async Task<PhotocardDto> AddPhotocardAsync(string accessToken, AddPhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByIdAsync(
-                await ResolveSetIdFromToken(accessToken, ct), ct)
+            var set = await _setRepository.GetByAccessTokenWithPhotocardIdsAsync(accessToken, ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
@@ -118,8 +117,8 @@ namespace Kureimo.Application.Services
             await _unitOfWork.CommitAsync(ct);
 
             _logger.LogInformation(
-                "Photocard adicionado: {PhotocardId} ao Set {SetId}",
-                photocard.Id, set.Id);
+                "Photocard adicionado: {PhotocardId} no Set {AccessToken} na posição {Order}",
+                photocard.Id, accessToken, photocard.Order);
 
             return MapToPhotocardDto(photocard);
         }

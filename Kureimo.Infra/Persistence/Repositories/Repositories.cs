@@ -66,6 +66,11 @@ namespace Kureimo.Infra.Persistence.Repositories
                     .ThenInclude(p => p.Claims)
                 .FirstOrDefaultAsync(s => s.AccessToken == accessToken, ct);
 
+        public async Task<Set?> GetByAccessTokenWithPhotocardIdsAsync(string accessToken, CancellationToken ct = default)
+            => await _context.Sets
+                .Include(s => s.Photocards)
+                .FirstOrDefaultAsync(s => s.AccessToken == accessToken, ct);
+
         public async Task<(IEnumerable<Set> Items, int TotalCount)> GetByGonIdAsync(Guid gonId, int page, int pageSize, CancellationToken ct = default)
         {
             var query = _context.Sets
