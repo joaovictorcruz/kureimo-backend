@@ -5,6 +5,7 @@ using Kureimo.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Kureimo.API.Controllers
 {
@@ -86,7 +87,8 @@ namespace Kureimo.API.Controllers
             [FromRoute] Guid photocardId,
             CancellationToken ct)
         {
-            var result = await _claimService.GetClaimsByPhotocardAsync(photocardId, ct);
+            var requestingUserRole = User.FindFirstValue(ClaimTypes.Role)!;
+            var result = await _claimService.GetClaimsByPhotocardAsync(photocardId, requestingUserRole, ct);
             return Ok(result);
         }
     }
