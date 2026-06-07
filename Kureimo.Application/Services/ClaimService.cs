@@ -117,14 +117,17 @@ namespace Kureimo.Application.Services
             _ = NotifyClaimRemovedAsync(set.AccessToken, photocardId, userId);
         }
 
-        public async Task<IEnumerable<ClaimDto>> GetClaimsByPhotocardAsync(Guid photocardId, string requestingUserRole, CancellationToken ct = default)
+        public async Task<IEnumerable<ClaimDto>> GetClaimsByPhotocardAsync(Guid photocardId, Guid requestUserId, CancellationToken ct = default)
         {
             var claims = await _photocardRepository.GetByIdWithClaimsAsync(photocardId, ct);
 
             if (claims is null)
                 throw new PhotocardNotFoundException(photocardId);
 
-            var isPrivileged = requestingUserRole == "Gon" || requestingUserRole == "Admin";
+            var set = await _setRepository.GetByIdAsync(claims.SetId, ct)
+                ?? throw new SetNotFoundException();
+
+            var isOwner = set.GonId == requestUserId;
 
             var userIds = claims.Claims.Select(c => c.UserId).Distinct().ToList();
             var usernames = new Dictionary<Guid, string>();
@@ -137,7 +140,7 @@ namespace Kureimo.Application.Services
                 if (u is not null)
                 {
                     usernames[uid] = u.Username;
-                    phoneNumbers[uid] = isPrivileged ? u.PhoneNumber : null;
+                    phoneNumbers[uid] = isOwner ? u.PhoneNumber : null;
                     profilePics[uid] = u.ProfilePicUrl;
                 }
             }

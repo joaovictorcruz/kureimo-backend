@@ -2,6 +2,7 @@
 using Kureimo.Application.Services;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
+using Kureimo.Infra.Cache;
 using Kureimo.Infra.Email;
 using Kureimo.Infra.Persistence;
 using Kureimo.Infra.Persistence.Repositories;
@@ -34,6 +35,7 @@ namespace Kureimo.Infra
                 .AddSecurity(configuration)
                 .AddRealTime()
                 .AddEmail(configuration)
+                .AddCache(configuration)
                 .AddApplicationServices();
 
             return services;
@@ -171,6 +173,31 @@ namespace Kureimo.Infra
                 o.ApiToken = configuration["Resend:ApiKey"]!;
             });
             services.AddTransient<IResend, ResendClient>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddCache(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var redisConnection = configuration.GetConnectionString("Redis");
+
+            if (!string.IsNullOrEmpty(redisConnection))
+            {
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = redisConnection;
+                    options.InstanceName = "kureimo:";
+                });
+            }
+            else
+            {
+                // Fallback para memória em dev caso Redis não esteja configurado
+                services.AddDistributedMemoryCache();
+            }
+
+            services.AddScoped<ISetCacheService, SetCacheService>();
 
             return services;
         }
