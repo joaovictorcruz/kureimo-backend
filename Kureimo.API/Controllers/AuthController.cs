@@ -149,7 +149,7 @@ namespace Kureimo.API.Controllers
             Response.Cookies.Append("kureimo_token", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = isProd,                                          // false em dev local
+                Secure = isProd, // false em dev local
                 SameSite = SameSiteMode.Lax,// Lax funciona em dev
                 Expires = DateTimeOffset.UtcNow.AddMinutes(480)
             });

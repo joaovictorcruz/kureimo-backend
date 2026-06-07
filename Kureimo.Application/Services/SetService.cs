@@ -21,6 +21,7 @@ namespace Kureimo.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRealtimeNotificationService _notificationService;
         private readonly IStorageService _storageService;
+        private readonly ISetCacheService _cacheService;
         private readonly ILogger<SetService> _logger;
 
         public SetService(
@@ -30,6 +31,7 @@ namespace Kureimo.Application.Services
             IUnitOfWork unitOfWork,
             IRealtimeNotificationService notificationService,
             IStorageService storageService,
+            ISetCacheService cacheService,
             ILogger<SetService> logger)
         {
             _setRepository = setRepository;
@@ -38,6 +40,7 @@ namespace Kureimo.Application.Services
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _storageService = storageService;
+            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -66,6 +69,10 @@ namespace Kureimo.Application.Services
 
         public async Task<SetDetailDto> GetByAccessTokenAsync(string accessToken, Guid requestingUserId, string requestingUserRole, CancellationToken ct = default)
         {
+            var cached = await _cacheService.GetAsync(accessToken, ct);
+            if (cached is not null)
+                return System.Text.Json.JsonSerializer.Deserialize<SetDetailDto>(cached)!;
+
             var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
                 ?? throw new SetNotFoundException(accessToken);
 
@@ -82,7 +89,16 @@ namespace Kureimo.Application.Services
             var gon = await _userRepository.GetByIdAsync(set.GonId, ct)
                  ?? throw new UserNotFoundException();
 
-            return MapToDetailDto(set, gon);
+            var dto = MapToDetailDto(set, gon);
+
+            // Só cacheia sets públicos ou open to claim
+            if (set.Status == SetStatus.Published || set.Status == SetStatus.Open)
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(dto);
+                await _cacheService.SetAsync(accessToken, json, ct);
+            }
+
+            return dto;
         }
 
         public async Task<PagedResultDto<SetDto>> GetMySetsAsync(
@@ -116,6 +132,8 @@ namespace Kureimo.Application.Services
             await _photocardRepository.AddAsync(photocard, ct);
             await _unitOfWork.CommitAsync(ct);
 
+            await _cacheService.InvalidateAsync(accessToken, ct);
+
             _logger.LogInformation(
                 "Photocard adicionado: {PhotocardId} no Set {AccessToken} na posição {Order}",
                 photocard.Id, accessToken, photocard.Order);
@@ -140,6 +158,8 @@ namespace Kureimo.Application.Services
 
             _logger.LogInformation("Photocard atualizado: {PhotocardId}", photocardId);
 
+            await _cacheService.InvalidateAsync(accessToken, ct);
+
             return MapToPhotocardDto(photocard);
         }
 
@@ -157,6 +177,8 @@ namespace Kureimo.Application.Services
 
             _photocardRepository.Remove(photocard);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
 
             _logger.LogInformation("Photocard removido: {PhotocardId} do Set {SetId}", photocardId, set.Id);
         }
@@ -176,6 +198,8 @@ namespace Kureimo.Application.Services
 
             await _unitOfWork.CommitAsync(ct);
 
+            await _cacheService.InvalidateAsync(accessToken, ct);
+
             _logger.LogInformation("Photocards reordenados no Set {SetId}", set.Id);
         }
 
@@ -190,6 +214,8 @@ namespace Kureimo.Application.Services
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
 
             _logger.LogInformation("Set publicado: {SetId}", set.Id);
         }
@@ -206,6 +232,8 @@ namespace Kureimo.Application.Services
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
 
+            await _cacheService.InvalidateAsync(accessToken, ct);
+
             _logger.LogInformation("Set aberto para claims: {SetId}", set.Id);
         }
 
@@ -221,6 +249,8 @@ namespace Kureimo.Application.Services
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
 
+            await _cacheService.InvalidateAsync(accessToken, ct);
+
             _logger.LogInformation("Set cancelado: {SetId} por GON {GonId}", set.Id, requestingUserId);
         }
 
@@ -235,6 +265,8 @@ namespace Kureimo.Application.Services
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
 
             _logger.LogInformation("Set encerrado: {SetId}", set.Id);
         }
@@ -267,6 +299,8 @@ namespace Kureimo.Application.Services
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
         }
 
         public async Task<SetDto> UpdateSetImageAsync(string accessToken, Stream imageStream, string fileName, Guid requestingUserId, CancellationToken ct = default)
@@ -282,6 +316,8 @@ namespace Kureimo.Application.Services
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
 
             _logger.LogInformation("Imagem do set atualizada: {SetId}", set.Id);
 
@@ -299,6 +335,8 @@ namespace Kureimo.Application.Services
 
             _setRepository.Update(set);
             await _unitOfWork.CommitAsync(ct);
+
+            await _cacheService.InvalidateAsync(accessToken, ct);
 
             _logger.LogInformation("Set removido do histórico: {SetId} por GOM {GonId}", set.Id, requestingUserId);
         }

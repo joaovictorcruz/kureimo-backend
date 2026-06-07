@@ -60,8 +60,8 @@ builder.Services.AddRateLimiter(options =>
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             }));
-
     // Política mais restrita para auth — evita brute force
+
     options.AddFixedWindowLimiter("auth", authOptions =>
     {
         authOptions.PermitLimit = 10;

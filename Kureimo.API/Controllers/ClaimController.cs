@@ -87,8 +87,8 @@ namespace Kureimo.API.Controllers
             [FromRoute] Guid photocardId,
             CancellationToken ct)
         {
-            var requestingUserRole = User.FindFirstValue(ClaimTypes.Role)!;
-            var result = await _claimService.GetClaimsByPhotocardAsync(photocardId, requestingUserRole, ct);
+            var requestingUserId = User.GetUserId();
+            var result = await _claimService.GetClaimsByPhotocardAsync(photocardId, requestingUserId, ct);
             return Ok(result);
         }
     }

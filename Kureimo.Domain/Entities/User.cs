@@ -137,13 +137,13 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("A senha não pode ser vazia.");
 
             if (password.Length < 8)
-                throw new DomainException("A senha deve ter pelo menos 8 caracteres.");
+                throw new DomainException("A senha deve conter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula e um número.");
 
             if (!password.Any(char.IsUpper))
-                throw new DomainException("A senha deve conter pelo menos uma letra maiúscula.");
+                throw new DomainException("A senha deve conter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula e um número.");
 
             if (!password.Any(char.IsDigit))
-                throw new DomainException("A senha deve conter pelo menos um número.");
+                throw new DomainException("A senha deve conter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula e um número.");
         }
     }
 }
