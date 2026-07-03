@@ -89,34 +89,6 @@ namespace Kureimo.Application.Services
             return MapToDto(user);
         }
 
-        public async Task UpdatePasswordAsync(Guid id, UpdatePasswordDto dto, Guid requestingUserId, CancellationToken ct = default)
-        {
-            if (id != requestingUserId)
-                throw new UnauthorizedDomainException();
-
-            var user = await _userRepository.GetByIdAsync(id, ct)
-                ?? throw new UserNotFoundException();
-
-            if (!_passwordHasher.Verify(dto.CurrentPassword, user.PasswordHash))
-                throw new InvalidCredentialsException();
-
-            // Adiciona esse log temporário para confirmar que chegou aqui
-            _logger.LogInformation("Verificando se nova senha é igual à atual...");
-
-            if (_passwordHasher.Verify(dto.NewPassword, user.PasswordHash))
-                throw new DomainException("A nova senha não pode ser igual à senha atual.");
-
-            User.ValidatePasswordStrength(dto.NewPassword);
-
-            var newHash = _passwordHasher.Hash(dto.NewPassword);
-            user.UpdatePasswordHash(newHash);
-
-            _userRepository.Update(user);
-            await _unitOfWork.CommitAsync(ct);
-
-            _logger.LogInformation("Senha atualizada: {UserId}", id);
-        }
-
         public async Task<UserDto> UpdateProfilePicAsync(Guid id, Stream imageStream, string fileName, Guid requestingUserId, CancellationToken ct = default)
         {
             if (id != requestingUserId)

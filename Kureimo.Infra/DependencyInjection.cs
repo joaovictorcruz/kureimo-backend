@@ -70,7 +70,6 @@ namespace Kureimo.Infra
             services.AddScoped<ISetRepository, SetRepository>();
             services.AddScoped<IPhotocardRepository, PhotocardRepository>();
             services.AddScoped<IClaimRepository, ClaimRepository>();
-            services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
 
             return services;
         }
@@ -152,7 +151,6 @@ namespace Kureimo.Infra
 
         private static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            services.AddScoped<AuthService>();
             services.AddScoped<UserService>();
             services.AddScoped<SetService>();
             services.AddScoped<ClaimService>();

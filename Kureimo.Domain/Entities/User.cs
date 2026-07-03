@@ -10,9 +10,9 @@ namespace Kureimo.Domain.Entities
 {
     public class User : BaseEntity
     {
+        public string LogtoId { get; private set; }
         public string Username { get; private set; }
         public string Email { get; private set; }
-        public string PasswordHash { get; private set; }
         public UserRole Role { get; private set; }
         public bool IsActive { get; private set; }
         public string? PhoneNumber { get; private set; }
@@ -20,14 +20,15 @@ namespace Kureimo.Domain.Entities
 
         private User() { }
 
-        public User(string username, string email, string passwordHash, string phoneNumber, UserRole role = UserRole.Collector)
+        public User(string logtoId, string username, string email, string phoneNumber, UserRole role = UserRole.Collector)
         {
+            ValidateLogtoId(logtoId);
             ValidateUsername(username);
             ValidateEmail(email);
 
+            LogtoId = logtoId;
             Username = username.Trim().ToLower();
             Email = email.Trim().ToLower();
-            PasswordHash = passwordHash;
             PhoneNumber = phoneNumber.Trim();
             Role = role;
             IsActive = true;
@@ -44,15 +45,6 @@ namespace Kureimo.Domain.Entities
         {
             ValidateEmail(email);
             Email = email.Trim().ToLower();
-            SetUpdatedAt();
-        }
-
-        public void UpdatePasswordHash(string passwordHash)
-        {
-            if (string.IsNullOrWhiteSpace(passwordHash))
-                throw new DomainException("Password hash não pode ser vazio.");
-
-            PasswordHash = passwordHash;
             SetUpdatedAt();
         }
 
@@ -97,6 +89,12 @@ namespace Kureimo.Domain.Entities
 
             IsActive = true;
             SetUpdatedAt();
+        }
+
+        private static void ValidateLogtoId(string logtoId)
+        {
+            if (string.IsNullOrWhiteSpace(logtoId))
+                throw new DomainException("LogtoId não pode ser vazio.");
         }
 
         private static void ValidateUsername(string username)
