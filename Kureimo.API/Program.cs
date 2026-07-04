@@ -126,6 +126,7 @@ app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<RequestTimestampMiddleware>();
 
 app.UseAuthentication();
+app.UseMiddleware<UserProvisioningMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

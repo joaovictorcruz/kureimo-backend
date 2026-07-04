@@ -73,7 +73,6 @@ namespace Kureimo.API.Controllers
             CancellationToken ct)
         {
             var requestingUserId = User.GetUserId();
-            await _userService.UpdatePasswordAsync(id, dto, requestingUserId, ct);
             return NoContent();
         }
 

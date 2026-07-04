@@ -28,6 +28,9 @@ namespace Kureimo.Infra.Persistence.Repositories
         public async Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default)
             => await _context.Users.FirstOrDefaultAsync(u => u.Username == username.ToLower(), ct);
 
+        public async Task<User?> GetByLogtoIdAsync(string logtoId, CancellationToken ct = default)
+            => await _context.Users.FirstOrDefaultAsync(u => u.LogtoId == logtoId, ct);
+
         public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
             => await _context.Users.AnyAsync(u => u.Email == email.ToLower(), ct);
 
@@ -172,25 +175,5 @@ namespace Kureimo.Infra.Persistence.Repositories
 
         public void Remove(Claim claim)
             => _context.Claims.Remove(claim);
-    }
-
-    public class PasswordResetTokenRepository : IPasswordResetTokenRepository
-    {
-        private readonly AppDbContext _context;
-
-        public PasswordResetTokenRepository(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<PasswordResetToken?> GetByTokenAsync(string token, CancellationToken ct = default)
-            => await _context.PasswordResetTokens
-                .FirstOrDefaultAsync(t => t.Token == token, ct);
-
-        public async Task AddAsync(PasswordResetToken resetToken, CancellationToken ct = default)
-            => await _context.PasswordResetTokens.AddAsync(resetToken, ct);
-
-        public void Update(PasswordResetToken resetToken)
-            => _context.PasswordResetTokens.Update(resetToken);
     }
 }

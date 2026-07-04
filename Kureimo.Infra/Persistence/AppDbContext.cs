@@ -17,7 +17,6 @@ namespace Kureimo.Infra.Persistence
         public DbSet<Set> Sets => Set<Set>();
         public DbSet<Photocard> Photocards => Set<Photocard>();
         public DbSet<Claim> Claims => Set<Claim>();
-        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

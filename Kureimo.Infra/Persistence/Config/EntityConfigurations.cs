@@ -23,9 +23,6 @@ namespace Kureimo.Infra.Persistence.Config
                 .IsRequired()
                 .HasMaxLength(200);
 
-            builder.Property(u => u.PasswordHash)
-                .IsRequired();
-
             builder.Property(u => u.Role)
                 .IsRequired()
                 .HasConversion<string>(); // Salva como "Collector", "Gon", "Admin" no banco
@@ -43,6 +40,7 @@ namespace Kureimo.Infra.Persistence.Config
             builder.Property(u => u.ProfilePicUrl);
 
             // Índices únicos para email e username
+            builder.HasIndex(u => u.LogtoId).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.Username).IsUnique();
         }
@@ -186,29 +184,6 @@ namespace Kureimo.Infra.Persistence.Config
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
-        }
-    }
-
-    public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
-    {
-        public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
-        {
-            builder.HasKey(t => t.Id);
-
-            builder.Property(t => t.Token)
-                .IsRequired()
-                .HasMaxLength(64);
-
-            builder.Property(t => t.ExpiresAt).IsRequired();
-            builder.Property(t => t.UsedAt);
-            builder.Property(t => t.CreatedAt).IsRequired();
-
-            builder.HasIndex(t => t.Token).IsUnique();
-
-            builder.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(t => t.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

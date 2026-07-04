@@ -11,10 +11,10 @@ namespace Kureimo.API.Extensions
         /// </summary>
         public static Guid GetUserId(this ClaimsPrincipal user)
         {
-            var sub = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var localId = user.FindFirstValue("local_user_id");
 
-            if (sub is null || !Guid.TryParse(sub, out var id))
-                throw new InvalidOperationException("UserId não encontrado no token JWT.");
+            if (localId is null || !Guid.TryParse(localId, out var id))
+                throw new InvalidOperationException("UserId local não encontrado — UserProvisioningMiddleware não rodou.");
 
             return id;
         }
