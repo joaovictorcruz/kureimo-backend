@@ -28,6 +28,9 @@ namespace Kureimo.Infra.Persistence.Repositories
         public async Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default)
             => await _context.Users.FirstOrDefaultAsync(u => u.Username == username.ToLower(), ct);
 
+        public async Task<User?> GetByLogtoIdAsync(string logtoId, CancellationToken ct = default)
+            => await _context.Users.FirstOrDefaultAsync(u => u.LogtoId == logtoId, ct);
+
         public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
             => await _context.Users.AnyAsync(u => u.Email == email.ToLower(), ct);
 

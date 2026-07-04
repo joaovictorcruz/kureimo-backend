@@ -1,6 +1,4 @@
 ﻿using Kureimo.Application.DTOs;
-using Kureimo.Application.Interfaces;
-using Kureimo.Domain.Entities;
 using Kureimo.Domain.Exceptions;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
@@ -17,20 +15,17 @@ namespace Kureimo.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IPasswordHasher _passwordHasher;
         private readonly IStorageService _storageService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
-            IPasswordHasher passwordHasher,
             IStorageService storageService,
             ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
-            _passwordHasher = passwordHasher;
             _storageService = storageService;
             _logger = logger;
         }

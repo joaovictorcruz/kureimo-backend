@@ -6,7 +6,6 @@ using Kureimo.Infra.Email;
 using Kureimo.Infra.Persistence;
 using Kureimo.Infra.Persistence.Repositories;
 using Kureimo.Infra.Realtime;
-using Kureimo.Infra.Security;
 using Kureimo.Infra.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -80,17 +79,10 @@ namespace Kureimo.Infra
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            // Lê a seção JwtSettings do appsettings.json e injeta via IOptions<JwtSettings>
-            services.Configure<JwtSettings>(
-                configuration.GetSection(JwtSettings.SectionName));
-
-            services.AddScoped<IJwtService, JwtService>();
-            services.AddScoped<IPasswordHasher, PasswordHasher>();
-
-            // Configura autenticação JWT no pipeline do ASP.NET Core
-            var jwtSettings = configuration
-                .GetSection(JwtSettings.SectionName)
-                .Get<JwtSettings>()!;
+            var authority = configuration["Logto:Authority"]
+                   ?? throw new InvalidOperationException("Logto:Authority não configurada.");
+            var audience = configuration["Logto:Audience"]
+                ?? throw new InvalidOperationException("Logto:Audience não configurada.");
 
             services.AddAuthentication(options =>
             {
@@ -99,33 +91,29 @@ namespace Kureimo.Infra
             })
             .AddJwtBearer(options =>
             {
+                // O Logto expõe o discovery document em {ENDPOINT}/oidc/.well-known/openid-configuration
+                options.Authority = $"{authority}/oidc";
+                options.Audience = audience;
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
+                    ValidIssuer = $"{authority}/oidc",
                     ValidateAudience = true,
+                    ValidAudience = audience,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(jwtSettings.Secret)),
-                    // Sem tolerância de clock — token expirado = inválido
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.FromMinutes(1)
                 };
 
-                // Necessário para que o SignalR consiga autenticar via query string
-                // O cliente envia: /hubs/set?access_token=...
+                // SignalR manda o token via query string, não header —
+                // mesma mecânica de antes, só que agora é token do Logto.
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
                     {
-                        // Lê o token do cookie httpOnly
-                        if (context.Request.Cookies.TryGetValue("kureimo_token", out var cookieToken))
-                            context.Token = cookieToken;
-
-                        // Mantém suporte ao query string para o SignalR
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
+
                         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                             context.Token = accessToken;
 
