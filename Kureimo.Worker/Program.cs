@@ -4,7 +4,7 @@ using Kureimo.Worker.Jobs;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructureForWorker(builder.Configuration);
 
 builder.Services.AddHttpClient("KureimoApi", (sp, client) =>
 {
