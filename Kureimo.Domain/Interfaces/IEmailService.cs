@@ -8,6 +8,6 @@ namespace Kureimo.Domain.Interfaces
 {
     public interface IEmailService
     {
-        Task SendPasswordResetEmailAsync(string toEmail, string username, string token, CancellationToken ct = default);
+        Task SendVerificationCodeAsync(string toEmail, string code, string usageType, CancellationToken ct = default);
     }
 }

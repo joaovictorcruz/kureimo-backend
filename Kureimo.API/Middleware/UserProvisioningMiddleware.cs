@@ -36,15 +36,11 @@ namespace Kureimo.API.Middleware
 
                     if (user is null)
                     {
-                        var email = context.User.FindFirstValue(ClaimTypes.Email)
-                            ?? context.User.FindFirstValue("email")
-                            ?? $"{logtoId}@sem-email.kureimo.com";
+                        var email = context.User.FindFirstValue("email") ?? $"{logtoId}@sem-email.kureimo.com";
 
-                        var phoneNumber = context.User.FindFirstValue("phone_number");
+                        var phoneNumber = context.User.FindFirstValue("phoneNumber");
 
-                        var username = context.User.FindFirstValue("username")
-                            ?? context.User.FindFirstValue("name")
-                            ?? logtoId;
+                        var username = context.User.FindFirstValue("username") ?? logtoId;
 
                         user = new User(logtoId, username, email, phoneNumber, UserRole.Collector);
 

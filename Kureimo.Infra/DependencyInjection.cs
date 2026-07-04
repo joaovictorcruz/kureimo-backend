@@ -1,5 +1,4 @@
-﻿using Kureimo.Application.Interfaces;
-using Kureimo.Application.Services;
+﻿using Kureimo.Application.Services;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
 using Kureimo.Infra.Email;
