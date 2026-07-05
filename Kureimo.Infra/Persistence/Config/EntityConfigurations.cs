@@ -39,6 +39,10 @@ namespace Kureimo.Infra.Persistence.Config
 
             builder.Property(u => u.ProfilePicUrl);
 
+            builder.Property(u => u.ProfileCompleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
             // Índices únicos para email e username
             builder.HasIndex(u => u.LogtoId).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();

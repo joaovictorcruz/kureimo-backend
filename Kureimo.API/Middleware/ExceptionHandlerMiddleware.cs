@@ -35,6 +35,7 @@ namespace Kureimo.API.Middleware
         {
             var (statusCode, message) = exception switch
             {
+                ProfileNotCompletedException e => (HttpStatusCode.Forbidden, e.Message),
                 // 409 Conflict
                 EmailAlreadyInUseException e => (HttpStatusCode.Conflict, e.Message),
                 UsernameAlreadyInUseException e => (HttpStatusCode.Conflict, e.Message),

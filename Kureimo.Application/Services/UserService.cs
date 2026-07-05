@@ -1,4 +1,6 @@
 ﻿using Kureimo.Application.DTOs;
+using Kureimo.Domain.Entities;
+using Kureimo.Domain.Enums;
 using Kureimo.Domain.Exceptions;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
@@ -16,24 +18,27 @@ namespace Kureimo.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IStorageService _storageService;
+        private readonly ILogtoManagementService _logtoManagementService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IStorageService storageService,
+            ILogtoManagementService logtoManagementService,
             ILogger<UserService> logger)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _storageService = storageService;
+            _logtoManagementService = logtoManagementService;
             _logger = logger;
         }
 
         public async Task<UserDto> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             var user = await _userRepository.GetByIdAsync(id, ct)
-                ?? throw new UserNotFoundException();
+                ?? throw new UserNotFoundException();   
 
             return MapToDto(user);
         }
@@ -137,10 +142,39 @@ namespace Kureimo.Application.Services
             _userRepository.Update(user);
             await _unitOfWork.CommitAsync(ct);
 
+            await _logtoManagementService.SuspendUserAsync(user.LogtoId, ct);
+
             _logger.LogInformation("Conta desativada: {UserId}", id);
         }
 
-        private static UserDto MapToDto(Domain.Entities.User user) =>
-            new(user.Id, user.Username, user.Email, user.Role.ToString(), user.IsActive, user.PhoneNumber, user.ProfilePicUrl, user.CreatedAt);
+        public async Task<UserDto> CompleteOnboardingAsync(Guid id, string email, string roleString, CancellationToken ct = default)
+        {
+            var user = await _userRepository.GetByIdAsync(id, ct)
+                ?? throw new UserNotFoundException();
+
+            var normalizedEmail = email.Trim().ToLower();
+
+            if (!string.Equals(normalizedEmail, user.Email, StringComparison.Ordinal)
+                && await _userRepository.EmailExistsAsync(normalizedEmail, ct))
+                throw new EmailAlreadyInUseException();
+
+            if (!Enum.TryParse<UserRole>(roleString, ignoreCase: true, out var role) || role == UserRole.Admin)
+                throw new DomainException("Role inválida. Use 'Gon' ou 'Collector'.");
+
+            user.CompleteOnboarding(normalizedEmail, role);
+
+            _userRepository.Update(user);
+            await _unitOfWork.CommitAsync(ct);
+
+            await _logtoManagementService.SetPrimaryEmailAsync(user.LogtoId, user.Email, ct);
+
+            _logger.LogInformation("Onboarding completo: {UserId}, role {Role}", id, role);
+
+            return MapToDto(user);
+        }
+
+        private static UserDto MapToDto(User user) =>
+            new(user.Id, user.Username, user.Email, user.Role.ToString(), user.IsActive,
+                user.PhoneNumber, user.ProfilePicUrl, user.ProfileCompleted, user.CreatedAt);
     }
 }

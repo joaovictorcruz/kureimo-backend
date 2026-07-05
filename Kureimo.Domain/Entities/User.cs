@@ -17,6 +17,7 @@ namespace Kureimo.Domain.Entities
         public bool IsActive { get; private set; }
         public string? PhoneNumber { get; private set; }
         public string? ProfilePicUrl { get; private set; }
+        public bool ProfileCompleted { get; private set; }
 
         private User() { }
 
@@ -32,6 +33,18 @@ namespace Kureimo.Domain.Entities
             PhoneNumber = phoneNumber.Trim();
             Role = role;
             IsActive = true;
+        }
+
+        public void CompleteOnboarding(string email, UserRole role)
+        {
+            if (role == UserRole.Admin)
+                throw new DomainException("Não é possível se auto-atribuir como Admin.");
+
+            ValidateEmail(email);
+            Email = email.Trim().ToLower();
+            Role = role;
+            ProfileCompleted = true;
+            SetUpdatedAt();
         }
 
         public void UpdateUsername(string username)

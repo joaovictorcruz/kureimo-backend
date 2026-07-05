@@ -139,5 +139,29 @@ namespace Kureimo.API.Controllers
             await _userService.DeactivateAsync(id, requestingUserId, ct);
             return NoContent();
         }
+
+        /// <summary>
+        /// Retorna os dados do usuário autenticado (via token do Logto).
+        /// O JIT provisioning já garantiu que o usuário existe localmente
+        /// antes desse código executar (roda no middleware, antes do controller).
+        /// </summary>
+        [HttpGet("me")]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMe(CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+            var result = await _userService.GetByIdAsync(userId, ct);
+            return Ok(result);
+        }
+
+
+        [HttpPost("me/complete-onboarding")]
+        public async Task<IActionResult> CompleteOnboarding([FromBody] CompleteOnboardingDto dto, CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+            var result = await _userService.CompleteOnboardingAsync(userId, dto.Email, dto.Role, ct);
+            return Ok(result);
+        }
+        public record CompleteOnboardingDto(string Email, string Role); // "Gon" ou "Collector"
     }
 }
