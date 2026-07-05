@@ -14,6 +14,7 @@ namespace Kureimo.Application.DTOs
         bool IsActive,
         string? PhoneNumber,   
         string? ProfilePicUrl,  
+        bool ProfileCompleted,
         DateTimeOffset CreatedAt
     );
 

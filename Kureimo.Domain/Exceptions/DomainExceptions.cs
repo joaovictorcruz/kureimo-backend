@@ -77,4 +77,10 @@ namespace Kureimo.Domain.Exceptions
         public InvalidCredentialsException()
             : base("Credenciais inválidas.") { }
     }
+
+    public class ProfileNotCompletedException : DomainException
+    {
+        public ProfileNotCompletedException()
+            : base("Você precisa completar seu cadastro antes de continuar: defina um email e escolha se você é GOM ou Collector.") { }
+    }
 }

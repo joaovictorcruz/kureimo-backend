@@ -176,6 +176,9 @@ namespace Kureimo.Application.Services
             var user = await _userRepository.GetByIdAsync(userId, ct)
                 ?? throw new UserNotFoundException();
 
+            if (!user.ProfileCompleted)
+                throw new ProfileNotCompletedException();
+
             if (set.GonId == userId)
                 throw new DomainException("Você não pode dar claim no seu próprio set.");
 

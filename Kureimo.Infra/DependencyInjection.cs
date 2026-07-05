@@ -3,6 +3,7 @@ using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
 using Kureimo.Infra.Cache;
 using Kureimo.Infra.Email;
+using Kureimo.Infra.Identity;
 using Kureimo.Infra.Persistence;
 using Kureimo.Infra.Persistence.Repositories;
 using Kureimo.Infra.Realtime;
@@ -84,6 +85,9 @@ namespace Kureimo.Infra
                    ?? throw new InvalidOperationException("Logto:Authority não configurada.");
             var audience = configuration["Logto:Audience"]
                 ?? throw new InvalidOperationException("Logto:Audience não configurada.");
+
+            services.Configure<LogtoManagementSettings>(configuration.GetSection(LogtoManagementSettings.SectionName));
+            services.AddHttpClient<ILogtoManagementService, LogtoManagementService>();
 
             services.AddAuthentication(options =>
             {

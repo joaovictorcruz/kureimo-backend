@@ -52,6 +52,9 @@ namespace Kureimo.Application.Services
             if (gon.Role != UserRole.Gon && gon.Role != UserRole.Admin)
                 throw new UnauthorizedDomainException();
 
+            if (!gon.ProfileCompleted)
+                throw new ProfileNotCompletedException();
+
             var tempToken = Guid.NewGuid().ToString("N")[..12];
 
             var imageUrl = await _storageService.UploadSetImageAsync(imageStream, imageFileName, tempToken, ct);

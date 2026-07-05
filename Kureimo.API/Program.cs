@@ -1,6 +1,7 @@
 ﻿using Kureimo.API.Middleware;
 using Kureimo.Infra;
 using Kureimo.Infra.Realtime;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
@@ -55,7 +56,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 150,
+                PermitLimit = 300,
                 Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
@@ -97,6 +98,16 @@ builder.Services.AddHttpContextAccessor();
 // Tudo registrado em Kureimo.Infra/DependencyInjection.cs
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Railway não tem uma lista fixa de IPs de proxy conhecidos,
+    // então liberamos confiar em qualquer proxy da cadeia (aceitável
+    // porque a API só é alcançável através do proxy do Railway, não direto).
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // MAX 5MB
@@ -114,6 +125,8 @@ if (app.Environment.IsDevelopment())
 
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
+
+app.UseForwardedHeaders();
 
 app.UseRateLimiter();
 
