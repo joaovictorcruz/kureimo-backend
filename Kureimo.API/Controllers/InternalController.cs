@@ -37,17 +37,6 @@ namespace Kureimo.API.Controllers
             await _setService.NotifySetOpenedAsync(dto.AccessToken, ct);
             return NoContent();
         }
-
-        [HttpPost("logto/send-email")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> SendLogtoEmail([FromBody] LogtoEmailWebhookDto dto, CancellationToken ct)
-        {
-            await _emailService.SendVerificationCodeAsync(dto.To, dto.Payload.Code, dto.Type, ct);
-            return Ok();
-        }
     }
-
     public record NotifySetOpenDto(string AccessToken);
-    public record LogtoEmailWebhookDto(string To, string Type, LogtoEmailPayloadDto Payload);
-    public record LogtoEmailPayloadDto(string Code);
 }
