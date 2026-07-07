@@ -71,6 +71,7 @@ namespace Kureimo.Infra
             services.AddScoped<ISetRepository, SetRepository>();
             services.AddScoped<IPhotocardRepository, PhotocardRepository>();
             services.AddScoped<IClaimRepository, ClaimRepository>();
+            services.AddScoped<IReviewRepository, ReviewRepository>();
 
             return services;
         }
@@ -147,6 +148,7 @@ namespace Kureimo.Infra
             services.AddScoped<UserService>();
             services.AddScoped<SetService>();
             services.AddScoped<ClaimService>();
+            services.AddScoped<ReviewService>();
             services.AddScoped<IStorageService, CloudinaryService>();
             services.AddScoped<IEmailService, ResendEmailService>();
 

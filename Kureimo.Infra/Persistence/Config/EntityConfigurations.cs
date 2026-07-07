@@ -190,4 +190,30 @@ namespace Kureimo.Infra.Persistence.Config
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
+
+    public class ReviewConfiguration : IEntityTypeConfiguration<Review>
+    {
+        public void Configure(EntityTypeBuilder<Review> builder)
+        {
+            builder.HasKey(r => r.Id);
+
+            builder.Property(r => r.Rating).IsRequired();
+            builder.Property(r => r.Comment).IsRequired().HasMaxLength(500);
+            builder.Property(r => r.CreatedAt).IsRequired();
+            builder.Property(r => r.UpdatedAt);
+
+            builder.HasIndex(r => new { r.AuthorUserId, r.TargetUserId }).IsUnique();
+            builder.HasIndex(r => new { r.TargetUserId, r.CreatedAt });
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(r => r.TargetUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(r => r.AuthorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
 }

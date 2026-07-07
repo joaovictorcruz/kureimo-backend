@@ -91,6 +91,9 @@ namespace Kureimo.Infra.Persistence.Repositories
             return (items, totalCount);
         }
 
+        public async Task<int> CountPublishedByGonIdAsync(Guid gonId, CancellationToken ct = default)
+            => await _context.Sets.CountAsync(s => s.GonId == gonId && s.Status != SetStatus.Draft, ct);
+
         public async Task AddAsync(Set set, CancellationToken ct = default)
             => await _context.Sets.AddAsync(set, ct);
 
@@ -175,5 +178,50 @@ namespace Kureimo.Infra.Persistence.Repositories
 
         public void Remove(Claim claim)
             => _context.Claims.Remove(claim);
+    }
+
+    public class ReviewRepository : IReviewRepository
+    {
+        private readonly AppDbContext _context;
+
+        public ReviewRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Review?> GetByAuthorAndTargetAsync(Guid authorUserId, Guid targetUserId, CancellationToken ct = default)
+            => await _context.Reviews.FirstOrDefaultAsync(
+                r => r.AuthorUserId == authorUserId && r.TargetUserId == targetUserId, ct);
+
+        public async Task<(IEnumerable<Review> Items, int TotalCount)> GetByTargetIdAsync(
+            Guid targetUserId, int page, int pageSize, CancellationToken ct = default)
+        {
+            var query = _context.Reviews
+                .Where(r => r.TargetUserId == targetUserId)
+                .OrderByDescending(r => r.CreatedAt);
+
+            var total = await query.CountAsync(ct);
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+
+            return (items, total);
+        }
+
+        public async Task<(double AverageRating, int Count)> GetRatingSummaryAsync(Guid targetUserId, CancellationToken ct = default)
+        {
+            var query = _context.Reviews.Where(r => r.TargetUserId == targetUserId);
+            var count = await query.CountAsync(ct);
+
+            if (count == 0)
+                return (0, 0);
+
+            var average = await query.AverageAsync(r => r.Rating, ct);
+            return (Math.Round(average, 1), count);
+        }
+
+        public async Task AddAsync(Review review, CancellationToken ct = default)
+            => await _context.Reviews.AddAsync(review, ct);
+
+        public void Update(Review review)
+            => _context.Reviews.Update(review);
     }
 }
