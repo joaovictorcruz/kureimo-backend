@@ -17,6 +17,7 @@ namespace Kureimo.Infra.Persistence
         public DbSet<Set> Sets => Set<Set>();
         public DbSet<Photocard> Photocards => Set<Photocard>();
         public DbSet<Claim> Claims => Set<Claim>();
+        public DbSet<Review> Reviews => Set<Review>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

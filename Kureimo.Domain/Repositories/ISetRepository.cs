@@ -25,6 +25,7 @@ namespace Kureimo.Domain.Repositories
         Task<Set?> GetByAccessTokenWithPhotocardIdsAsync(string accessToken, CancellationToken ct = default);
 
         Task<(IEnumerable<Set> Items, int TotalCount)> GetByGonIdAsync(Guid gonId, int page, int pageSize, CancellationToken ct = default);
+        Task<int> CountPublishedByGonIdAsync(Guid gonId, CancellationToken ct = default);
 
         Task AddAsync(Set set, CancellationToken ct = default);
         void Update(Set set);
