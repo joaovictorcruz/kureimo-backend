@@ -55,7 +55,7 @@ namespace Kureimo.Infra.Email
             };
 
             var message = new EmailMessage();
-            message.From = "onboarding@resend.dev"; // até pegar domínio próprio
+            message.From = "noreply@kureimo.com";
             message.To.Add(toEmail);
             message.Subject = subject;
             message.HtmlBody = BuildVerificationEmailHtml(heading, description, code);
