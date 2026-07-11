@@ -138,6 +138,8 @@ app.UseMiddleware<ExceptionHandlerMiddleware>();
 // Captura o timestamp exato da request — lido pelo ClaimController
 app.UseMiddleware<RequestTimestampMiddleware>();
 
+app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+
 app.UseAuthentication();
 app.UseMiddleware<UserProvisioningMiddleware>();
 app.UseAuthorization();
