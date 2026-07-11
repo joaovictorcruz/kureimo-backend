@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kureimo-worker-p
+  namespace: kureimo-prod
+spec:
+  replicas: 1   
+  selector:
+    matchLabels:
+      app: kureimo-worker-p
+  template:
+    metadata:
+      labels:
+        app: kureimo-worker-p
+    spec:
+      containers:
+        - name: kureimo-worker
+          image: joaovcrz/hmlkureimoworker:latest
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+          envFrom:
+            - secretRef:
+                name: kureimo-secrets
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "150m"
+              memory: "200Mi"
