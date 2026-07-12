@@ -9,10 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  deploy-production:
+  ci:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
-
+    outputs:
+      api_version: ${{ steps.api_version.outputs.version }}
+      worker_version: ${{ steps.worker_version.outputs.version }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -28,39 +30,26 @@ jobs:
         id: api_version
         run: |
           VERSION=$(grep -oP '(?<=<VersionPrefix>).*?(?=</VersionPrefix>)' Kureimo.API/Kureimo.API.csproj)
-
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
           PATCH=$((PATCH + 1))
-
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
           sed -i "s/<VersionPrefix>$VERSION<\/VersionPrefix>/<VersionPrefix>$NEW_VERSION<\/VersionPrefix>/" Kureimo.API/Kureimo.API.csproj
-
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Bump Worker Version
         id: worker_version
         run: |
           VERSION=$(grep -oP '(?<=<VersionPrefix>).*?(?=</VersionPrefix>)' Kureimo.Worker/Kureimo.Worker.csproj)
-
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
           PATCH=$((PATCH + 1))
-
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
           sed -i "s/<VersionPrefix>$VERSION<\/VersionPrefix>/<VersionPrefix>$NEW_VERSION<\/VersionPrefix>/" Kureimo.Worker/Kureimo.Worker.csproj
-
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit Version Bump
         run: |
-          git add Kureimo.API/Kureimo.API.csproj
-          git add Kureimo.Worker/Kureimo.Worker.csproj
-
+          git add Kureimo.API/Kureimo.API.csproj Kureimo.Worker/Kureimo.Worker.csproj
           git commit -m "chore: bump versions [skip ci]" || echo "No changes"
-
           git push
 
       - name: Set up Docker Buildx
@@ -92,25 +81,26 @@ jobs:
             joaovcrz/hmlkureimoworker:${{ steps.worker_version.outputs.version }}
             joaovcrz/hmlkureimoworker:latest
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.36.1'
 
-      - name: Redeploy API
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Configure kubeconfig
         run: |
-          railway redeploy \
-            --service ee1f1a35-820c-4cba-87f9-e31e950c29a0 \
-            --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
-            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9 \
-            --yes
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_B64 }}" | base64 -d > $HOME/.kube/config
 
-      - name: Redeploy Worker
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy API
         run: |
-          railway redeploy \
-            --service ff255d01-f11c-44e6-a42d-823dfa11c528 \
-            --environment 212d94e4-2114-4dc8-9237-ccd356677dd3 \
-            --project a5934b9c-f3e9-483c-bfff-cd61822f49e9 \
-            --yes
+          kubectl set image deployment/kureimo-api-p kureimo-api=joaovcrz/hmlkureimoapi:${{ needs.ci.outputs.api_version }} -n kureimo-prod
+          kubectl rollout status deployment/kureimo-api-p -n kureimo-prod --timeout=120s
+
+      - name: Deploy Worker
+        run: |
+          kubectl set image deployment/kureimo-worker-p kureimo-worker=joaovcrz/hmlkureimoworker:${{ needs.ci.outputs.worker_version }} -n kureimo-prod
+          kubectl rollout status deployment/kureimo-worker-p -n kureimo-prod --timeout=120s
