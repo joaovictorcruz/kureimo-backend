@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  ci:
+  CI:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     outputs:
@@ -81,8 +81,8 @@ jobs:
             joaovcrz/hmlkureimoworker:${{ steps.worker_version.outputs.version }}
             joaovcrz/hmlkureimoworker:latest
 
-  cd:
-    needs: ci
+  CD:
+    needs: CI
     runs-on: ubuntu-latest
     steps:
       - name: Set up kubectl
