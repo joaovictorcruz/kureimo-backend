@@ -1,5 +1,33 @@
+name: Rollback Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_version:
+        description: 'Versão da API para reverter (ex: 1.2.3). Deixe em branco para não mexer na API.'
+        required: false
+        type: string
+      worker_version:
+        description: 'Versão do Worker para reverter (ex: 1.2.3). Deixe em branco para não mexer no Worker.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
 jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar entrada
+        run: |
+          if [ -z "${{ inputs.api_version }}" ] && [ -z "${{ inputs.worker_version }}" ]; then
+            echo "::error::Informe pelo menos uma versão (API ou Worker) para reverter."
+            exit 1
+          fi
+
   rollback-owner:
+    needs: validar
     if: github.actor == 'joaovcrz'
     runs-on: ubuntu-latest
     steps:
@@ -26,6 +54,7 @@ jobs:
           kubectl rollout status deployment/kureimo-worker-p -n kureimo-prod --timeout=120s
 
   rollback-outros:
+    needs: validar
     if: github.actor != 'joaovcrz'
     runs-on: ubuntu-latest
     environment: production-rollback
