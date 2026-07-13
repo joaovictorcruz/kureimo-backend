@@ -123,6 +123,22 @@ namespace Kureimo.Application.Services
             );
         }
 
+        public async Task<PagedResultDto<SetDto>> GetClaimedSetsAsync(Guid userId, PaginationDto pagination,CancellationToken ct = default)
+        {
+            var pageSize = Math.Clamp(pagination.PageSize, 1, 50);
+            var page = Math.Max(pagination.Page, 1);
+
+            var (items, totalCount) = await _setRepository.GetClaimedByUserIdAsync(userId, page, pageSize, ct);
+
+            return new PagedResultDto<SetDto>(
+                Items: items.Select(MapToDto),
+                Page: page,
+                PageSize: pageSize,
+                TotalCount: totalCount,
+                TotalPages: (int)Math.Ceiling(totalCount / (double)pageSize)
+            );
+        }
+
         public async Task<PhotocardDto> AddPhotocardAsync(string accessToken, AddPhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
         {
             var set = await _setRepository.GetByAccessTokenWithPhotocardIdsAsync(accessToken, ct)
@@ -357,14 +373,6 @@ namespace Kureimo.Application.Services
         {
             if (set.GonId != requestingUserId)
                 throw new UnauthorizedDomainException();
-        }
-
-        // Resolve o SetId a partir do AccessToken sem carregar os photocards
-        private async Task<Guid> ResolveSetIdFromToken(string accessToken, CancellationToken ct)
-        {
-            var set = await _setRepository.GetByAccessTokenAsync(accessToken, ct)
-                ?? throw new SetNotFoundException(accessToken);
-            return set.Id;
         }
 
         /// <summary>

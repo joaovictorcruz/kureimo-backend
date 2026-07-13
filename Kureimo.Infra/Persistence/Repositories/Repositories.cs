@@ -91,6 +91,30 @@ namespace Kureimo.Infra.Persistence.Repositories
             return (items, totalCount);
         }
 
+        public async Task<(IEnumerable<Set> Items, int TotalCount)> GetClaimedByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken ct = default)
+        {
+            // Sets distintos onde existe pelo menos um Claim do usuário em algum Photocard do set.
+            // Claim -> Photocard -> Set via chaves públicas, sem depender das coleções privadas.
+            var claimedSetIds = _context.Claims
+                .Where(c => c.UserId == userId)
+                .Join(_context.Photocards, c => c.PhotocardId, p => p.Id, (c, p) => p.SetId)
+                .Distinct();
+
+            var query = _context.Sets
+                .Include(s => s.Photocards)
+                .Where(s => claimedSetIds.Contains(s.Id) && s.GonId != userId)
+                .OrderByDescending(s => s.CreatedAt);
+
+            var totalCount = await query.CountAsync(ct);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct);
+
+            return (items, totalCount);
+        }
+
         public async Task<int> CountPublishedByGonIdAsync(Guid gonId, CancellationToken ct = default)
             => await _context.Sets.CountAsync(s => s.GonId == gonId && s.Status != SetStatus.Draft, ct);
 
