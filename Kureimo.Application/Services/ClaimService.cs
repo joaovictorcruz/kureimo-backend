@@ -1,4 +1,5 @@
 ﻿using Kureimo.Application.DTOs;
+using Kureimo.Application.Metrics;
 using Kureimo.Domain.Entities;
 using Kureimo.Domain.Exceptions;
 using Kureimo.Domain.Interfaces;
@@ -21,6 +22,7 @@ namespace Kureimo.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRealtimeNotificationService _notificationService;
         private readonly ILogger<ClaimService> _logger;
+        private readonly KureimoMetrics _metrics;
 
         // Máximo de tentativas em caso de conflito de concorrência
         private const int MaxRetryAttempts = 50;
@@ -32,7 +34,8 @@ namespace Kureimo.Application.Services
             IClaimRepository claimRepository,
             IUnitOfWork unitOfWork,
             IRealtimeNotificationService notificationService,
-            ILogger<ClaimService> logger)
+            ILogger<ClaimService> logger,
+            KureimoMetrics metrics)
         {
             _setRepository = setRepository;
             _photocardRepository = photocardRepository;
@@ -41,6 +44,7 @@ namespace Kureimo.Application.Services
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
             _logger = logger;
+            _metrics = metrics;
         }
 
         /// <summary>
@@ -70,6 +74,7 @@ namespace Kureimo.Application.Services
                 }
                 catch (ConcurrencyException) when (attempt < MaxRetryAttempts)
                 {
+                    _metrics.RecordConcurrencyRetry();
                     _logger.LogWarning(
                         "Conflito de concorrência no claim do photocard {PhotocardId}. Tentativa {Attempt}/{Max}",
                         photocardId, attempt, MaxRetryAttempts);
@@ -108,6 +113,8 @@ namespace Kureimo.Application.Services
 
             _claimRepository.Remove(claim);
             await _unitOfWork.CommitAsync(ct);
+
+            _metrics.RecordClaimRemoved();
 
             _logger.LogInformation(
                 "Claim removido — Photocard: {PhotocardId} | Usuário: {UserId} | Timestamp: {Timestamp}",
@@ -193,6 +200,8 @@ namespace Kureimo.Application.Services
 
             await _claimRepository.AddAsync(claim, ct);
             await _unitOfWork.CommitAsync(ct);
+
+            _metrics.RecordClaimRegistered();
 
             _logger.LogInformation(
                 "Claim registrado — Photocard: {PhotocardId} | Usuário: {UserId} | Posição: {Position} | Timestamp: {Timestamp}",

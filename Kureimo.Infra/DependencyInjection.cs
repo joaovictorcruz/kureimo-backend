@@ -1,4 +1,5 @@
-﻿using Kureimo.Application.Services;
+﻿using Kureimo.Application.Metrics;
+using Kureimo.Application.Services;
 using Kureimo.Domain.Interfaces;
 using Kureimo.Domain.Repositories;
 using Kureimo.Infra.Cache;
@@ -151,6 +152,7 @@ namespace Kureimo.Infra
             services.AddScoped<ReviewService>();
             services.AddScoped<IStorageService, CloudinaryService>();
             services.AddScoped<IEmailService, ResendEmailService>();
+            services.AddSingleton<KureimoMetrics>();
 
             return services;
         }

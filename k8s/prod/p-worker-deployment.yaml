@@ -12,6 +12,10 @@ spec:
     metadata:
       labels:
         app: kureimo-worker-p
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9464"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: kureimo-worker

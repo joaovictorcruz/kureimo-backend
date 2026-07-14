@@ -1,9 +1,11 @@
 ﻿using Kureimo.API.Middleware;
+using Kureimo.Application.Metrics;
 using Kureimo.Infra;
 using Kureimo.Infra.Realtime;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Metrics;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -98,6 +100,27 @@ builder.Services.AddHttpContextAccessor();
 // Tudo registrado em Kureimo.Infra/DependencyInjection.cs
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ── Observabilidade: métricas via OpenTelemetry, coletadas pelo Prometheus Agent
+if (builder.Environment.IsProduction())
+{
+    try
+    {
+        builder.Services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(KureimoMetrics.MeterName)
+                    .AddPrometheusExporter();
+            });
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"[Observability] Falha ao configurar métricas, seguindo sem elas: {ex.Message}");
+    }
+}
+
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -139,6 +162,8 @@ app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseMiddleware<RequestTimestampMiddleware>();
 
 app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+if (builder.Environment.IsProduction())
+    app.MapPrometheusScrapingEndpoint().AllowAnonymous();
 
 app.UseAuthentication();
 app.UseMiddleware<UserProvisioningMiddleware>();

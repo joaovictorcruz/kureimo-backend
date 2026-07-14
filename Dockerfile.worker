@@ -23,4 +23,5 @@ RUN dotnet publish "Kureimo.Worker.csproj" -c Release -o /app/publish /p:UseAppH
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+EXPOSE 9464
 ENTRYPOINT ["dotnet", "Kureimo.Worker.dll"]
