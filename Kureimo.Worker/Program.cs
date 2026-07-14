@@ -1,6 +1,8 @@
+using Kureimo.Application.Metrics;
 using Kureimo.Infra;
 using Kureimo.Worker;
 using Kureimo.Worker.Jobs;
+using OpenTelemetry.Metrics;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -15,6 +17,28 @@ builder.Services.AddHttpClient("KureimoApi", (sp, client) =>
         "X-Internal-Api-Key",
         config["InternalApi:ApiKey"]);
 });
+
+if (builder.Environment.IsProduction())
+{
+    try
+    {
+        builder.Services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(KureimoMetrics.MeterName)
+                    .AddPrometheusHttpListener(options =>
+                    {
+                        options.UriPrefixes = new[] { "http://+:9464/" };
+                    });
+            });
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"[Observability] Falha ao configurar métricas, seguindo sem elas: {ex.Message}");
+    }
+}
 
 builder.Services.AddHostedService<AutoOpenSetsJob>();
 
