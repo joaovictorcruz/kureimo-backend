@@ -60,6 +60,23 @@ namespace Kureimo.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Lista os sets em que o usuário autenticado já deu claim em ao menos um photocard —
+        /// histórico de participação como collector. Se o usuário também for GON, seus próprios
+        /// sets não aparecem aqui (ver /sets/mine para isso).
+        /// </summary>
+        /// <response code="200">Lista de sets já participados.</response>
+        [HttpGet("claimed")]
+        [ProducesResponseType(typeof(PagedResultDto<SetDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetClaimedSets(
+            [FromQuery] PaginationDto pagination,
+            CancellationToken ct)
+        {
+            var userId = User.GetUserId();
+            var result = await _setService.GetClaimedSetsAsync(userId, pagination, ct);
+            return Ok(result);
+        }
+
         // ── Endpoints de criação e edição (GON) ───────────────────────────────────
 
         /// <summary>
