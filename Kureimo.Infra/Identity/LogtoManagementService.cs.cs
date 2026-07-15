@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -108,23 +109,26 @@ namespace Kureimo.Infra.Identity
             return _cachedToken;
         }
 
-        public async Task SuspendUserAsync(string logtoUserId, CancellationToken ct = default)
+        public async Task DeleteUserAsync(string logtoUserId, CancellationToken ct = default)
         {
             var token = await GetManagementTokenAsync(ct);
 
-            using var request = new HttpRequestMessage(HttpMethod.Patch, $"{_authority}/api/users/{logtoUserId}/is-suspended")
-            {
-                Content = JsonContent.Create(new { isSuspended = true })
-            };
+            using var request = new HttpRequestMessage(HttpMethod.Delete, $"{_authority}/api/users/{logtoUserId}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var response = await _httpClient.SendAsync(request, ct);
 
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Usuário {LogtoUserId} já não existia no Logto ao tentar excluir.", logtoUserId);
+                return;
+            }
+
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogError("Falha ao suspender usuário no Logto {LogtoUserId}: {Status} — {Body}", logtoUserId, response.StatusCode, body);
-                throw new DomainException("Não foi possível desativar a conta. Tente novamente.");
+                _logger.LogError("Falha ao excluir usuário no Logto {LogtoUserId}: {Status} — {Body}", logtoUserId, response.StatusCode, body);
+                throw new DomainException("Não foi possível excluir a conta. Tente novamente.");
             }
         }
 
