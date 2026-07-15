@@ -9,6 +9,6 @@ namespace Kureimo.Domain.Interfaces
     public interface ILogtoManagementService
     {
         Task SetPrimaryEmailAsync(string logtoUserId, string email, CancellationToken ct = default);
-        Task SuspendUserAsync(string logtoUserId, CancellationToken ct = default);
+        Task DeleteUserAsync(string logtoUserId, CancellationToken ct = default);
     }
 }

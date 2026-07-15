@@ -142,7 +142,7 @@ namespace Kureimo.Application.Services
             _userRepository.Update(user);
             await _unitOfWork.CommitAsync(ct);
 
-            await _logtoManagementService.SuspendUserAsync(user.LogtoId, ct);
+            await _logtoManagementService.DeleteUserAsync(user.LogtoId, ct);
 
             _logger.LogInformation("Conta desativada: {UserId}", id);
         }
