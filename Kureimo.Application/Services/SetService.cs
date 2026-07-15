@@ -70,7 +70,7 @@ namespace Kureimo.Application.Services
             return MapToDto(set);
         }
 
-        public async Task<SetDetailDto> GetByAccessTokenAsync(string accessToken, Guid requestingUserId, string requestingUserRole, CancellationToken ct = default)
+        public async Task<SetDetailDto> GetByAccessTokenAsync(string accessToken, Guid? requestingUserId, string requestingUserRole, CancellationToken ct = default)
         {
             var cached = await _cacheService.GetAsync(accessToken, ct);
             if (cached is not null)

@@ -142,6 +142,17 @@ namespace Kureimo.Domain.Entities
                 throw new DomainException("Número de telefone inválido.");
         }
 
+        public void Anonymize()
+        {
+            Username = $"deleted_{Id.ToString("N")[..22]}"; // 30 chars, respeita o limite do ValidateUsername
+            Email = $"deleted-{Id}@kureimo.invalid";
+            PhoneNumber = null;
+            ProfilePicUrl = null;
+            LogtoId = $"deleted-{Id}";
+            IsActive = false;
+            SetUpdatedAt();
+        }
+
         public static void ValidatePasswordStrength(string password)
         {
             if (string.IsNullOrWhiteSpace(password))

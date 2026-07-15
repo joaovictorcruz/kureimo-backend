@@ -31,14 +31,17 @@ namespace Kureimo.API.Controllers
         /// <response code="200">Detalhes do set.</response>
         /// <response code="404">Set não encontrado ou ainda em Draft.</response>
         [HttpGet("{accessToken}")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(SetDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetByAccessToken(
             [FromRoute] string accessToken,
             CancellationToken ct)
         {
-            var userId = User.GetUserId();
-            var role = User.FindFirstValue(ClaimTypes.Role)!;
+            var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+            Guid? userId = isAuthenticated ? User.GetUserId() : null;
+            var role = isAuthenticated ? User.FindFirstValue(ClaimTypes.Role) : null;
 
             var result = await _setService.GetByAccessTokenAsync(accessToken, userId, role, ct);
             return Ok(result);
