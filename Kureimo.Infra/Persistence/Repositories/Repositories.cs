@@ -63,11 +63,18 @@ namespace Kureimo.Infra.Persistence.Repositories
         /// Carrega o set com todos os photocards e seus claims.
         /// Usado na página do set — snapshot inicial antes do SignalR assumir.
         /// </summary>
-        public async Task<Set?> GetByAccessTokenWithDetailsAsync(string accessToken, CancellationToken ct = default)
-            => await _context.Sets
+        public async Task<Set?> GetByAccessTokenWithDetailsAsync(string accessToken, bool includeDeleted = false, CancellationToken ct = default)
+        {
+            var query = _context.Sets.AsQueryable();
+
+            if (includeDeleted)
+                query = query.IgnoreQueryFilters();
+
+            return await query
                 .Include(s => s.Photocards.OrderBy(p => p.Order))
                     .ThenInclude(p => p.Claims)
                 .FirstOrDefaultAsync(s => s.AccessToken == accessToken, ct);
+        }
 
         public async Task<Set?> GetByAccessTokenWithPhotocardIdsAsync(string accessToken, CancellationToken ct = default)
             => await _context.Sets
