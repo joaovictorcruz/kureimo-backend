@@ -137,12 +137,12 @@ namespace Kureimo.Application.Services
             var user = await _userRepository.GetByIdAsync(id, ct)
                 ?? throw new UserNotFoundException();
 
-            user.Deactivate();
+            await _logtoManagementService.DeleteUserAsync(user.LogtoId, ct);
+            user.Anonymize();
 
             _userRepository.Update(user);
             await _unitOfWork.CommitAsync(ct);
 
-            await _logtoManagementService.DeleteUserAsync(user.LogtoId, ct);
 
             _logger.LogInformation("Conta desativada: {UserId}", id);
         }
