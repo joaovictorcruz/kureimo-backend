@@ -76,7 +76,7 @@ namespace Kureimo.Application.Services
             if (cached is not null)
                 return System.Text.Json.JsonSerializer.Deserialize<SetDetailDto>(cached)!;
 
-            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, includeDeleted: true, ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             // Sets em Draft não são acessíveis via link ainda
@@ -162,7 +162,7 @@ namespace Kureimo.Application.Services
 
         public async Task<PhotocardDto> UpdatePhotocardAsync(string accessToken, Guid photocardId, UpdatePhotocardDto dto, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct: ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
@@ -184,7 +184,7 @@ namespace Kureimo.Application.Services
 
         public async Task RemovePhotocardAsync(string accessToken, Guid photocardId, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct: ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
@@ -204,7 +204,7 @@ namespace Kureimo.Application.Services
 
         public async Task ReorderPhotocardsAsync(string accessToken, ReorderPhotocardsDto dto, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct: ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
@@ -224,7 +224,7 @@ namespace Kureimo.Application.Services
 
         public async Task PublishAsync(string accessToken, Guid requestingUserId, CancellationToken ct = default)
         {
-            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct)
+            var set = await _setRepository.GetByAccessTokenWithDetailsAsync(accessToken, ct: ct)
                 ?? throw new SetNotFoundException(accessToken);
 
             EnsureIsOwner(set, requestingUserId);
