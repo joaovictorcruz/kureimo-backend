@@ -17,6 +17,7 @@ spec:
         prometheus.io/port: "9464"
         prometheus.io/path: "/metrics"
     spec:
+      priorityClassName: kureimo-critical
       containers:
         - name: kureimo-worker
           image: joaovcrz/hmlkureimoworker:latest
